@@ -29,6 +29,7 @@ const sensorInput = new Float32Array(LAYERS[0]);
 sense(sensorAgent, sensorLevel, sensorInput);
 assert.equal(sensorAgent.rays.length, 18);
 assert.equal(sensorAgent.rays[0].kind, 'solid', 'The forward ray must detect a wall.');
+assert.ok(sensorAgent.rays[8].x2 < sensorAgent.rays[8].x1, 'The rear ray must point behind the agent.');
 assert.ok(sensorInput[6] > 0 && sensorInput[6] < 1, 'The wall distance must be normalized.');
 
 const baselineFitness = fitness({ startDist: 100, bestDist: 80, exploration: 0, idle: 0 }, 1200);

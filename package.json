@@ -1,0 +1,10 @@
+{
+  "name": "ki-evo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser-based platformer neuroevolution experiment",
+  "scripts": {
+    "check": "node tests/smoke-test.js"
+  }
+}

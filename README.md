@@ -1,92 +1,129 @@
-# Plattformer-KI – Evolution im Level
+# Ki-Evo – Plattform-KI lernt durch Evolution
 
-> **Kurzbeschreibung:** Ki-Evo ist ein browserbasiertes KI-Experiment: Agenten lernen, ein selbst gestaltetes Plattform-Level zu bewältigen. Neuronale Netze steuern die Agenten; ein genetischer Algorithmus entwickelt sie über Generationen weiter.
+Ki-Evo ist ein browserbasiertes Neuroevolution-Experiment. Du baust eigene Plattform-Level und beobachtest, wie eine Population von Agenten mithilfe eines neuronalen Netzes und eines genetischen Algorithmus lernt, das Ziel zu erreichen.
 
-Ein browserbasiertes Experiment, bei dem eine Population kleiner KI-Agenten lernt, ein selbst gestaltetes Plattform-Level zu durchqueren. Ein neuronales Netz entscheidet über Bewegung und Springen; ein genetischer Algorithmus entwickelt die Netze über Generationen weiter.
+![Ki-Evo – Beispielszene mit mehreren Agenten](docs/ki-evo-preview.jpg)
+
+**[Live-Demo öffnen](https://benninator11.github.io/Ki-Evo/)** · [Quellcode](https://github.com/Benninator11/Ki-Evo)
+
+> Die Live-Demo wird über GitHub Actions veröffentlicht. Nach dem ersten Einrichten von Pages kann es einen Moment dauern, bis die Seite erreichbar ist.
 
 ## Funktionen
-- Level-Editor für Plattformen, Wände, Spezialblöcke und Gefahren.
-- Start- und Zielposition direkt im Level festlegen.
-- Physik mit Kollisionen, Schwerkraft, Sprüngen und unterschiedlichen Oberflächen.
-- Mehrere Agenten gleichzeitig simulieren und ihre Entwicklung beobachten.
-- Evolution mit Turnierselektion, uniformem Crossover, Mutation und Elitismus.
-- Populationsgröße, Mutationsrate, Simulationsgeschwindigkeit und Zeitlimit einstellen.
-- Statistiken und Fitness-Verlauf anzeigen.
-- Level und trainierte KI als JSON exportieren und importieren.
-- Level und beste KI zusätzlich lokal im Browser speichern.
+
+- **Level-Editor:** Plattformen, Wände, Spezialblöcke und Gefahren platzieren, verschieben, skalieren und bearbeiten.
+- **Drei Start-Level:** „Einfacher Sprung“, „Abgründe“ und „Hindernisparcours“ als auswählbare Vorlagen.
+- **Acht Raycast-Sensoren:** Die Agenten erfassen Hindernisse, Gefahren und den Boden vor sich. Die Sichtstrahlen des aktuell besten Agenten können direkt im Level angezeigt werden.
+- **Neuronales Netz:** Live-Visualisierung der Schichten `14 → 12 → 8 → 2`. Aktivierte positive Beiträge werden grün, negative rot dargestellt.
+- **Genetischer Algorithmus:** Turnierselektion, uniformes Crossover, Gauß-Mutation und Elitismus.
+- **Fitness-Funktion:** Fortschritt zum Ziel, Erkundung neuer Bereiche, Stillstandsstrafe und Zielbonus.
+- **Training:** Populationsgröße, Mutationsrate, Simulationsgeschwindigkeit und Zeitlimit einstellen.
+- **Statistiken:** Generation, aktive Population, beste Fitness, Rekord, Zielerreichung und Fitness-Verlauf.
+- **Import / Export:** Level und trainierte KI als JSON speichern und wieder laden.
+- **Lokale Speicherung:** Level und beste KI werden zusätzlich im Browser gespeichert.
+- **Keine Backend- oder KI-API erforderlich.**
 
 ## Schnellstart
-Es ist keine Installation zusätzlicher Pakete vorgesehen.
-1. Repository herunterladen oder klonen.
-2. `index.html` in einem aktuellen Browser öffnen.
-3. Im Editor Startpunkt und Ziel setzen.
-4. Ein Level bauen oder das Beispiel-Level laden.
-5. Im Bereich **Training** auf **Start** klicken.
 
-Falls der Browser lokale Dateien einschränkt, kann das Projekt über einen lokalen statischen Webserver geöffnet werden.
+Ki-Evo verwendet native JavaScript-ES-Module. Öffne die Seite deshalb über einen lokalen Webserver und nicht per `file://`.
+
+### Mit Python
+
+```bash
+python3 -m http.server 8000
+```
+
+Danach im Browser `http://localhost:8000` öffnen.
+
+### Mit Node.js
+
+```bash
+npx serve .
+```
+
+Oder du verwendest direkt die [GitHub-Pages-Demo](https://benninator11.github.io/Ki-Evo/).
 
 ## Bedienung
+
 ### Level erstellen
-- Eine Kachel aus der Block-Palette auswählen und anschließend im Spielfeld platzieren oder per Drag-and-drop hineinziehen.
-- Einen vorhandenen Block anklicken, um Typ, Größe, Farbe und Kollisionsverhalten zu bearbeiten.
-- Die Ecke unten rechts eines Blocks dient zum Ändern seiner Größe.
-- Mit Entf, Rechtsklick oder **Block löschen** kann ein ausgewählter Block entfernt werden.
+
+- Einen Block aus der Palette in das Spielfeld ziehen oder anklicken und im Spielfeld platzieren.
+- Vorhandene Blöcke anklicken, um Typ, Größe, Farbe und Kollisionsverhalten zu ändern.
+- Die Ecke unten rechts eines ausgewählten Blocks dient zum Skalieren.
+- Mit **Entf**, Rechtsklick oder **Block löschen** den ausgewählten Block entfernen.
 - **Start setzen** und **Ziel setzen** aktivieren den jeweiligen Platzierungsmodus.
-- Das Raster-Snapping kann ein- oder ausgeschaltet werden.
+- Unter **Beispiel-Level** eine der drei Vorlagen auswählen und mit **Beispiel-Level laden** übernehmen.
 
 ### Training
-- **Population:** Anzahl der Agenten pro Generation.
-- **Mutation-Rate:** Wahrscheinlichkeit, mit der einzelne Genomwerte verändert werden.
-- **Geschwindigkeit:** Simulationsgeschwindigkeit.
-- **Max. Zeit pro Generation:** Zeitlimit für einen Trainingsdurchlauf.
-- **Start/Pause/Weiter:** Training starten oder pausieren.
-- **Nächste Generation:** Eine Generation manuell abschließen.
-- **Reset:** Training und die lokal gespeicherte KI zurücksetzen.
 
-Eine Generation endet, wenn keine Agenten mehr aktiv sind oder das Zeitlimit erreicht wurde. Die Fitness bewertet den erreichten Fortschritt in Richtung Ziel; das Erreichen des Ziels gibt einen großen Zusatzbonus.
+1. Ein Level laden oder Start, Ziel und Hindernisse selbst platzieren.
+2. Population, Mutationsrate, Geschwindigkeit und Zeitlimit einstellen.
+3. **Start** drücken und die Agenten beobachten.
+4. Über **Raycasts im Level anzeigen** die Sichtstrahlen des aktuell besten Agenten ein- oder ausblenden.
+5. Im Netzwerkdiagramm verfolgen, welche Neuronen und Verbindungen gerade aktiv sind.
+
+Eine Generation endet, wenn keine Agenten mehr aktiv sind oder das Zeitlimit erreicht wurde. Die Evolution übernimmt die besten Genome in die nächste Generation.
+
+## KI-Architektur
+
+Das neuronale Netz hat die Schichten **14 → 12 → 8 → 2**.
+
+Die 14 Eingaben bestehen aus sechs Bewegungs- und Zielwerten sowie acht Raycast-Sensorwerten. Die Ausgaben steuern horizontale Bewegung und Springen.
+
+Die Fitness berücksichtigt den erreichten Fortschritt zum Ziel, neu erkundete Bereiche, eine Strafe für längeren Stillstand und einen hohen Bonus für das Erreichen des Ziels.
+
+### Kompatibilität älterer KI-Dateien
+
+KI-Dateien aus der vorherigen Architektur `6 → 12 → 8 → 2` können weiterhin importiert werden. Die bisherigen Gewichte bleiben erhalten; die zusätzlichen Raycast-Eingänge werden beim Laden neutral initialisiert.
 
 ## Projektstruktur
+
 ```text
 .
 ├── index.html
 ├── README.md
+├── LICENSE
+├── package.json
 ├── css/
 │   └── style.css
+├── docs/
+│   └── ki-evo-preview.jpg
 ├── js/
 │   ├── engine.js
 │   ├── nn.js
 │   ├── ai.js
 │   ├── level.js
 │   └── main.js
-└── beispielbilder/
-    └── *.jpg
+├── tests/
+│   └── smoke-test.js
+└── .github/
+    └── workflows/
+        └── pages.yml
 ```
 
-Die JavaScript-Dateien werden in der Reihenfolge eingebunden, die in `index.html` festgelegt ist:
-- **engine.js** – Spielwelt, Blocktypen, Physik, Agenten, Fitness und Canvas-Rendering.
-- **nn.js** – neuronales Netz und reproduzierbarer Zufallszahlengenerator.
-- **ai.js** – genetischer Algorithmus mit Selektion, Crossover, Mutation und Elitismus.
-- **level.js** – Level-Datenmodell und Editor-Funktionen.
-- **main.js** – Benutzeroberfläche, Trainingsablauf, Statistiken sowie Import und Export.
+Alle JavaScript-Dateien nutzen ES-Module (`import` / `export`); `main.js` ist der Einstiegspunkt.
 
-## KI-Architektur
-Das neuronale Netz besitzt die Schichten **6 → 12 → 8 → 2**.
+## Tests
 
-Die sechs Eingaben beschreiben normierte Position, Geschwindigkeit, Entfernung zum Ziel und Bodenkontakt. Die zwei Ausgaben steuern horizontale Bewegung und Springen.
+Für die grundlegenden Funktionstests wird Node.js benötigt:
 
-Die Evolution verwendet Turnierselektion, uniformes Crossover, gaußsche Mutation und Elitismus.
+```bash
+npm run check
+```
 
-## Speichern und Exportieren
-- **Level:** exportiert das aktuelle Level als `level.json`.
-- **KI:** exportiert die bisher beste trainierte KI als `ki.json`.
-- **Level + KI:** exportiert beides gemeinsam, sofern eine trainierte KI vorhanden ist.
-- JSON-Dateien können über die Import-Schaltflächen wieder geladen werden.
+Die Tests prüfen unter anderem die Netzwerkgröße, Sensorwerte und Raycasts, alle drei Level-Vorlagen, den Import alter Genome, den genetischen Algorithmus und einen Physikschritt.
 
-Die automatische Speicherung verwendet `localStorage` und ist browser- und gerätebezogen. Sie ersetzt keinen Export als Datei.
+## GitHub Pages
 
-## Voraussetzungen
-- Aktueller Browser mit JavaScript- und Canvas-Unterstützung.
-- Keine externe KI-API und keine zusätzlichen JavaScript-Pakete erforderlich.
+Der Workflow in `.github/workflows/pages.yml` veröffentlicht den Inhalt des Repositorys automatisch bei Pushes auf `main`. Einmalig muss unter **Settings → Pages → Build and deployment → Source** die Option **GitHub Actions** ausgewählt werden. Danach wird die Seite automatisch aktualisiert.
+
+## Repository-Metadaten
+
+Empfohlene GitHub-Beschreibung:
+
+> Browserbasiertes Neuroevolution-Spiel: Level-Editor, Raycast-Sensoren und neuronale Netze lernen per genetischem Algorithmus.
+
+Empfohlene Topics: `genetic-algorithm`, `neural-network`, `javascript`, `canvas`, `neuroevolution`.
 
 ## Lizenz
-Eine Lizenz ist in diesem Repository derzeit nicht angegeben. Vor Weiterverwendung oder Weiterverteilung sollte eine passende Lizenz ergänzt werden.
+
+Dieses Projekt steht unter der **MIT-Lizenz**. Siehe [LICENSE](LICENSE).

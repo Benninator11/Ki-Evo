@@ -3,13 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Plattformer-KI – Evolution im Level</title>
+  <meta name="theme-color" content="#14181f">
+  <meta name="description" content="Ki-Evo: Ein browserbasiertes Neuroevolution-Experiment mit Level-Editor, Raycast-Sensoren und neuronaler Live-Visualisierung.">
+  <title>Ki-Evo – Plattformer-KI</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header class="topbar">
-    <h1>Plattformer-KI</h1>
-    <span class="sub">Level bauen · Population trainieren · Evolution beobachten</span>
+    <h1>Ki-Evo</h1>
+    <span class="sub">Level bauen · KI trainieren · Evolution beobachten</span>
   </header>
 
   <main class="layout">
@@ -26,32 +28,36 @@
           <button id="btnPlaceStart" class="btn-start">Start setzen</button>
           <button id="btnPlaceGoal" class="btn-goal">Ziel setzen</button>
         </div>
-        <label class="check"><input type="checkbox" id="chkGrid" checked> Raster-Snapping (20&nbsp;px)</label>
+        <label class="check"><input type="checkbox" id="chkGrid" checked> Raster-Snapping (20 px)</label>
       </section>
       <section id="propsSection">
         <h3>Block-Menü</h3>
-        <p class="hint" id="propsHint">Block im Level anklicken, um Eigenschaften zu bearbeiten. Ecke unten rechts = Größe ändern. Entf / Rechtsklick = löschen.</p>
+        <p class="hint" id="propsHint">Block anklicken, um Typ, Größe und Farbe zu bearbeiten. Entf / Rechtsklick = löschen.</p>
         <div id="props" hidden>
-          <label>Typ
-            <select id="propType"></select>
-          </label>
+          <label>Typ<select id="propType"></select></label>
           <div class="row">
-            <label>Breite <input type="number" id="propW" min="10" max="1280" step="10"></label>
-            <label>Höhe <input type="number" id="propH" min="10" max="640" step="10"></label>
+            <label>Breite<input type="number" id="propW" min="10" max="1280" step="10"></label>
+            <label>Höhe<input type="number" id="propH" min="10" max="640" step="10"></label>
           </div>
-          <label>Farbe <input type="color" id="propColor"></label>
+          <label>Farbe<input type="color" id="propColor"></label>
           <label class="check"><input type="checkbox" id="propSolid"> Fest / aktiv (Kollision)</label>
           <button id="btnDelete" class="btn-danger">Block löschen</button>
         </div>
       </section>
       <section>
-        <h3>Level</h3>
-        <div class="row">
-          <button id="btnExample">Beispiel-Level</button>
-          <button id="btnClearLevel">Leeren</button>
-        </div>
+        <h3>Beispiel-Level</h3>
+        <label>Vorlage
+          <select id="levelPreset">
+            <option value="easy">Einfacher Sprung</option>
+            <option value="gaps">Abgründe</option>
+            <option value="obstacles">Hindernisparcours</option>
+          </select>
+        </label>
+        <button id="btnExample">Beispiel-Level laden</button>
+        <button id="btnClearLevel">Level leeren</button>
       </section>
     </aside>
+
     <section class="stage">
       <div class="canvas-wrap" id="canvasWrap">
         <canvas id="game" width="1280" height="640"></canvas>
@@ -67,22 +73,25 @@
         <div><span>Mutation</span><b id="infoMut">10 %</b></div>
         <div><span>Zeit</span><b id="infoTime">0.0 s</b></div>
       </div>
+      <section class="network-panel">
+        <div class="network-heading">
+          <div>
+            <h2>Neuronales Netz</h2>
+            <p class="hint">Aktive Verbindungen des besten Agenten · Grün = positiver, Rot = negativer Beitrag</p>
+          </div>
+          <label class="check sensor-toggle"><input type="checkbox" id="chkSensors" checked> Raycasts im Level anzeigen</label>
+        </div>
+        <canvas id="network" width="900" height="410" aria-label="Live-Visualisierung des neuronalen Netzes"></canvas>
+      </section>
     </section>
+
     <aside class="panel" id="controlPanel">
       <h2>Training</h2>
       <section>
-        <label class="slider">Population: <b id="popVal">50</b>
-          <input type="range" id="popRange" min="1" max="100" value="50">
-        </label>
-        <label class="slider">Mutation-Rate: <b id="mutVal">10 %</b>
-          <input type="range" id="mutRange" min="0" max="100" value="10">
-        </label>
-        <label class="slider">Geschwindigkeit: <b id="speedVal">1×</b>
-          <input type="range" id="speedRange" min="1" max="50" value="1">
-        </label>
-        <label>Max. Zeit pro Generation (s)
-          <input type="number" id="timeInput" min="5" max="120" value="20">
-        </label>
+        <label class="slider">Population: <b id="popVal">50</b><input type="range" id="popRange" min="1" max="100" value="50"></label>
+        <label class="slider">Mutation-Rate: <b id="mutVal">10 %</b><input type="range" id="mutRange" min="0" max="100" value="10"></label>
+        <label class="slider">Geschwindigkeit: <b id="speedVal">1×</b><input type="range" id="speedRange" min="1" max="50" value="1"></label>
+        <label>Max. Zeit pro Generation (s)<input type="number" id="timeInput" min="5" max="120" value="20"></label>
       </section>
       <section>
         <div class="row">
@@ -107,14 +116,10 @@
           <label class="filebtn">Level ⬆<input type="file" id="fileLevel" accept=".json,application/json" hidden></label>
           <label class="filebtn">KI ⬆<input type="file" id="fileAI" accept=".json,application/json" hidden></label>
         </div>
-        <p class="hint">Level und beste KI werden zusätzlich automatisch im Browser (localStorage) gesichert.</p>
+        <p class="hint">Level und beste KI werden automatisch im Browser gespeichert.</p>
       </section>
     </aside>
   </main>
-  <script src="js/engine.js"></script>
-  <script src="js/nn.js"></script>
-  <script src="js/ai.js"></script>
-  <script src="js/level.js"></script>
-  <script src="js/main.js"></script>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

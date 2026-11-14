@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plattformer-KI – Evolution im Level</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Plattformer-KI</h1>
+    <span class="sub">Level bauen · Population trainieren · Evolution beobachten</span>
+  </header>
+
+  <main class="layout">
+    <aside class="panel" id="editorPanel">
+      <h2>Editor</h2>
+      <section>
+        <h3>Block-Palette</h3>
+        <p class="hint">Auf das Level ziehen – oder anklicken und ins Level klicken.</p>
+        <div class="palette" id="palette"></div>
+      </section>
+      <section>
+        <h3>Start &amp; Ziel</h3>
+        <div class="row">
+          <button id="btnPlaceStart" class="btn-start">Start setzen</button>
+          <button id="btnPlaceGoal" class="btn-goal">Ziel setzen</button>
+        </div>
+        <label class="check"><input type="checkbox" id="chkGrid" checked> Raster-Snapping (20&nbsp;px)</label>
+      </section>
+      <section id="propsSection">
+        <h3>Block-Menü</h3>
+        <p class="hint" id="propsHint">Block im Level anklicken, um Eigenschaften zu bearbeiten. Ecke unten rechts = Größe ändern. Entf / Rechtsklick = löschen.</p>
+        <div id="props" hidden>
+          <label>Typ
+            <select id="propType"></select>
+          </label>
+          <div class="row">
+            <label>Breite <input type="number" id="propW" min="10" max="1280" step="10"></label>
+            <label>Höhe <input type="number" id="propH" min="10" max="640" step="10"></label>
+          </div>
+          <label>Farbe <input type="color" id="propColor"></label>
+          <label class="check"><input type="checkbox" id="propSolid"> Fest / aktiv (Kollision)</label>
+          <button id="btnDelete" class="btn-danger">Block löschen</button>
+        </div>
+      </section>
+      <section>
+        <h3>Level</h3>
+        <div class="row">
+          <button id="btnExample">Beispiel-Level</button>
+          <button id="btnClearLevel">Leeren</button>
+        </div>
+      </section>
+    </aside>
+    <section class="stage">
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="game" width="1280" height="640"></canvas>
+        <div class="overlay" id="overlay" hidden></div>
+        <div class="toast" id="toast" hidden></div>
+      </div>
+      <div class="infobar" id="infobar">
+        <div><span>Generation</span><b id="infoGen">0</b></div>
+        <div><span>Population</span><b id="infoPop">0 / 0</b></div>
+        <div><span>Beste Fitness</span><b id="infoBest">–</b></div>
+        <div><span>Rekord</span><b id="infoBestEver">–</b></div>
+        <div><span>Ziel erreicht</span><b id="infoGoal">Nein</b></div>
+        <div><span>Mutation</span><b id="infoMut">10 %</b></div>
+        <div><span>Zeit</span><b id="infoTime">0.0 s</b></div>
+      </div>
+    </section>
+    <aside class="panel" id="controlPanel">
+      <h2>Training</h2>
+      <section>
+        <label class="slider">Population: <b id="popVal">50</b>
+          <input type="range" id="popRange" min="1" max="100" value="50">
+        </label>
+        <label class="slider">Mutation-Rate: <b id="mutVal">10 %</b>
+          <input type="range" id="mutRange" min="0" max="100" value="10">
+        </label>
+        <label class="slider">Geschwindigkeit: <b id="speedVal">1×</b>
+          <input type="range" id="speedRange" min="1" max="50" value="1">
+        </label>
+        <label>Max. Zeit pro Generation (s)
+          <input type="number" id="timeInput" min="5" max="120" value="20">
+        </label>
+      </section>
+      <section>
+        <div class="row">
+          <button id="btnPlay" class="btn-primary">▶ Start</button>
+          <button id="btnNext" disabled>Nächste Generation</button>
+        </div>
+        <button id="btnReset">Reset</button>
+      </section>
+      <section>
+        <h3>Fitness-Verlauf</h3>
+        <canvas id="chart" width="320" height="120"></canvas>
+        <p class="hint"><span class="dot dot-best"></span> beste &nbsp; <span class="dot dot-avg"></span> Durchschnitt</p>
+      </section>
+      <section>
+        <h3>Speichern / Laden</h3>
+        <div class="row">
+          <button id="btnSaveLevel">Level ⬇</button>
+          <button id="btnSaveAI">KI ⬇</button>
+        </div>
+        <button id="btnSaveAll">Level + KI ⬇</button>
+        <div class="row">
+          <label class="filebtn">Level ⬆<input type="file" id="fileLevel" accept=".json,application/json" hidden></label>
+          <label class="filebtn">KI ⬆<input type="file" id="fileAI" accept=".json,application/json" hidden></label>
+        </div>
+        <p class="hint">Level und beste KI werden zusätzlich automatisch im Browser (localStorage) gesichert.</p>
+      </section>
+    </aside>
+  </main>
+  <script src="js/engine.js"></script>
+  <script src="js/nn.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/level.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

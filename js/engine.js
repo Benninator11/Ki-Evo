@@ -152,9 +152,9 @@
     { name: 'Unten steil', angle: Math.PI * 0.34, length: 190, anchor: 'front' },
     { name: 'Boden vorn', angle: Math.PI / 2, length: 190, anchor: 'frontFoot', down: true },
     { name: 'Boden mitte', angle: Math.PI / 2, length: 155, anchor: 'bottom', down: true },
-    { name: 'Hinten', angle: 0, length: 150, anchor: 'back' },
-    { name: 'Hinten oben', angle: -Math.PI / 4, length: 170, anchor: 'back' },
-    { name: 'Hinten unten', angle: Math.PI / 4, length: 170, anchor: 'back' },
+    { name: 'Hinten', angle: 0, length: 150, anchor: 'back', reverse: true },
+    { name: 'Hinten oben', angle: -Math.PI / 4, length: 170, anchor: 'back', reverse: true },
+    { name: 'Hinten unten', angle: Math.PI / 4, length: 170, anchor: 'back', reverse: true },
     { name: 'Vorne oben steil', angle: -Math.PI * 0.42, length: 190, anchor: 'front' },
     { name: 'Vorne unten steil', angle: Math.PI * 0.42, length: 190, anchor: 'frontFoot' },
     { name: 'Boden links', angle: Math.PI / 2, length: 220, anchor: 'backFoot', down: true },
@@ -202,7 +202,7 @@
     else if (config.anchor === 'backFoot') { ox = facing > 0 ? a.x + 1 : a.x + a.w - 1; oy = a.y + a.h - 2; }
     else if (config.anchor === 'bottom') { ox = a.x + a.w / 2; oy = a.y + a.h - 1; }
 
-    let dx = Math.cos(config.angle) * facing;
+    let dx = Math.cos(config.angle) * facing * (config.reverse ? -1 : 1);
     let dy = Math.sin(config.angle);
     const magnitude = Math.hypot(dx, dy) || 1;
     dx /= magnitude; dy /= magnitude;

@@ -141,7 +141,7 @@
     return score;
   };
 
-  // Acht Richtungs-Sensoren ergänzen die sechs Bewegungs-/Ziel-Eingaben.
+  // 18 Raycasts für Hindernisse, Gefahren, Rückraum und Bodenabdeckung.
   const DIAG = Math.sqrt(C.W * C.W + C.H * C.H);
   const SENSOR_RAYS = [
     { name: 'Vorne', angle: 0, length: 240, anchor: 'front' },
@@ -152,6 +152,16 @@
     { name: 'Unten steil', angle: Math.PI * 0.34, length: 190, anchor: 'front' },
     { name: 'Boden vorn', angle: Math.PI / 2, length: 190, anchor: 'frontFoot', down: true },
     { name: 'Boden mitte', angle: Math.PI / 2, length: 155, anchor: 'bottom', down: true },
+    { name: 'Hinten', angle: 0, length: 150, anchor: 'back' },
+    { name: 'Hinten oben', angle: -Math.PI / 4, length: 170, anchor: 'back' },
+    { name: 'Hinten unten', angle: Math.PI / 4, length: 170, anchor: 'back' },
+    { name: 'Vorne oben steil', angle: -Math.PI * 0.42, length: 190, anchor: 'front' },
+    { name: 'Vorne unten steil', angle: Math.PI * 0.42, length: 190, anchor: 'frontFoot' },
+    { name: 'Boden links', angle: Math.PI / 2, length: 220, anchor: 'backFoot', down: true },
+    { name: 'Boden rechts', angle: Math.PI / 2, length: 220, anchor: 'frontFoot', down: true },
+    { name: 'Boden voraus', angle: Math.PI / 2, length: 280, anchor: 'frontFoot', down: true },
+    { name: 'Seitlich oben', angle: -Math.PI / 2, length: 105, anchor: 'front' },
+    { name: 'Seitlich unten', angle: Math.PI / 2, length: 125, anchor: 'frontFoot', down: true },
   ];
 
   function rayRectDistance(x, y, dx, dy, length, rect) {
@@ -186,8 +196,10 @@
     let ox = a.x + a.w / 2;
     let oy = a.y + a.h / 2;
     if (config.anchor === 'front') { ox = frontX; oy = a.y + a.h * 0.44; }
+    else if (config.anchor === 'back') { ox = facing > 0 ? a.x + 1 : a.x + a.w - 1; oy = a.y + a.h * 0.44; }
     else if (config.anchor === 'top') { ox = a.x + a.w / 2; oy = a.y + 2; }
     else if (config.anchor === 'frontFoot') { ox = frontX; oy = a.y + a.h - 2; }
+    else if (config.anchor === 'backFoot') { ox = facing > 0 ? a.x + 1 : a.x + a.w - 1; oy = a.y + a.h - 2; }
     else if (config.anchor === 'bottom') { ox = a.x + a.w / 2; oy = a.y + a.h - 1; }
 
     let dx = Math.cos(config.angle) * facing;
@@ -243,6 +255,20 @@
       out[6 + i] = result.value;
       a.rays[i] = result.ray;
     }
+    const ax = a.x + a.w / 2, ay = a.y + a.h / 2;
+    const gx = level.goal.x + level.goal.w / 2, gy = level.goal.y + level.goal.h / 2;
+    out[24] = Math.max(-1, Math.min(1, (gx - ax) / C.W));
+    out[25] = Math.max(-1, Math.min(1, (gy - ay) / C.H));
+    let nearestHazard = null, nearestDistance = DIAG;
+    for (const block of level.blocks) {
+      const def = BLOCK_TYPES[block.type];
+      if (block.solid === false || !def || def.kind !== 'deadly') continue;
+      const hx = block.x + block.w / 2, hy = block.y + block.h / 2;
+      const d = Math.hypot(hx - ax, hy - ay);
+      if (d < nearestDistance) { nearestDistance = d; nearestHazard = { x: hx, y: hy }; }
+    }
+    out[26] = Math.max(0, Math.min(1, nearestDistance / DIAG));
+    out[27] = nearestHazard ? Math.max(-1, Math.min(1, (nearestHazard.y - ay) / C.H)) : 0;
     a.sensorValues = out;
     return out;
   };

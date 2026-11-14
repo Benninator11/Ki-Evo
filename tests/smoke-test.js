@@ -54,7 +54,7 @@ const migratedPrevious = upgradeLegacyGenome(previousGenome);
 assert.equal(migratedPrevious.length, genomeSize());
 assert.equal(migratedPrevious[0], previousGenome[0]);
 assert.equal(migrated[0], oldGenome[0]);
-assert.equal(migrated[14 * 12], oldGenome[6 * 12]);
+assert.equal(migrated[28 * 12], oldGenome[6 * 12]);
 const ga = new GA(99);
 const genomes = ga.initialGenomes(6, migrated, 0.1);
 const next = ga.nextGeneration(genomes, genomes.map((_, i) => i), 6, 0.1);

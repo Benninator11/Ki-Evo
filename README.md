@@ -1,5 +1,7 @@
 # Plattformer-KI – Evolution im Level
 
+> **Kurzbeschreibung:** Ki-Evo ist ein browserbasiertes KI-Experiment: Agenten lernen, ein selbst gestaltetes Plattform-Level zu bewältigen. Neuronale Netze steuern die Agenten; ein genetischer Algorithmus entwickelt sie über Generationen weiter.
+
 Ein browserbasiertes Experiment, bei dem eine Population kleiner KI-Agenten lernt, ein selbst gestaltetes Plattform-Level zu durchqueren. Ein neuronales Netz entscheidet über Bewegung und Springen; ein genetischer Algorithmus entwickelt die Netze über Generationen weiter.
 
 ## Funktionen

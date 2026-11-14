@@ -210,7 +210,7 @@ import { Level, Editor } from './level.js';
   function aiToJSON() {
     return {
       format: 'platformer-ki-ai',
-      version: 2,
+      version: 3,
       layers: LAYERS,
       generation: state.seedInfo ? state.seedInfo.generation : state.gen,
       fitness: state.seedInfo ? state.seedInfo.fitness : null,

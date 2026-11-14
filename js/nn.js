@@ -2,8 +2,9 @@
    Das Genom ist ein flaches Float32Array mit allen Gewichten/Biases.
    Layout je Schicht: erst Gewichte (in*out, zeilenweise je Ausgang), dann Biases (out). */
 
-  // Eingabe 14 -> 12 -> 8 -> Ausgabe 2 (links/rechts, springen)
-  export const LAYERS = [14, 12, 8, 2];
+  // Eingabe 28 -> 12 -> 8 -> Ausgabe 2 (Bewegung, springen)
+  export const LAYERS = [28, 12, 8, 2];
+export const PREVIOUS_LAYERS = [14, 12, 8, 2];
 export const LEGACY_LAYERS = [6, 12, 8, 2];
 
   export function genomeSize() {
@@ -76,23 +77,24 @@ export const LEGACY_LAYERS = [6, 12, 8, 2];
   }
 
 
-// Migriert gespeicherte Version-1-Netze (6 Eingaben) auf die neue 14-Sensor-Architektur.
-// Die bisherigen Gewichte bleiben erhalten; neue Raycast-Verbindungen starten neutral.
+// Migriert ältere 6- oder 14-Eingabe-Netze auf die aktuelle 28-Sensor-Architektur.
 export function upgradeLegacyGenome(oldGenome) {
-  const oldFirstSize = LEGACY_LAYERS[0] * LEGACY_LAYERS[1] + LEGACY_LAYERS[1];
+  const layouts = [PREVIOUS_LAYERS, LEGACY_LAYERS];
+  const oldLayers = layouts.find((layers) => {
+    const size = layers[0] * layers[1] + layers[1]
+      + layers[1] * layers[2] + layers[2]
+      + layers[2] * layers[3] + layers[3];
+    return oldGenome instanceof Float32Array && oldGenome.length === size;
+  });
+  if (!oldLayers) throw new Error('Alte KI-Datei hat eine unerwartete Netzwerkgröße.');
+  const oldFirstSize = oldLayers[0] * oldLayers[1] + oldLayers[1];
   const newFirstSize = LAYERS[0] * LAYERS[1] + LAYERS[1];
-  const expectedOld = oldFirstSize
-    + LEGACY_LAYERS[1] * LEGACY_LAYERS[2] + LEGACY_LAYERS[2]
-    + LEGACY_LAYERS[2] * LEGACY_LAYERS[3] + LEGACY_LAYERS[3];
-  if (!(oldGenome instanceof Float32Array) || oldGenome.length !== expectedOld) {
-    throw new Error('Alte KI-Datei hat eine unerwartete Netzwerkgröße.');
-  }
   const upgraded = new Float32Array(genomeSize());
-  for (let neuron = 0; neuron < LEGACY_LAYERS[1]; neuron++) {
-    for (let input = 0; input < LEGACY_LAYERS[0]; input++) {
-      upgraded[neuron * LAYERS[0] + input] = oldGenome[neuron * LEGACY_LAYERS[0] + input];
+  for (let neuron = 0; neuron < oldLayers[1]; neuron++) {
+    for (let input = 0; input < oldLayers[0]; input++) {
+      upgraded[neuron * LAYERS[0] + input] = oldGenome[neuron * oldLayers[0] + input];
     }
-    upgraded[LAYERS[0] * LAYERS[1] + neuron] = oldGenome[LEGACY_LAYERS[0] * LEGACY_LAYERS[1] + neuron];
+    upgraded[LAYERS[0] * LAYERS[1] + neuron] = oldGenome[oldLayers[0] * oldLayers[1] + neuron];
   }
   upgraded.set(oldGenome.subarray(oldFirstSize), newFirstSize);
   return upgraded;

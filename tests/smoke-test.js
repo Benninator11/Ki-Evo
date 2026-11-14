@@ -4,8 +4,8 @@ import { LAYERS, genomeSize, randomGenome, makeRng, forward, upgradeLegacyGenome
 import { GA } from '../js/ai.js';
 import { Level } from '../js/level.js';
 
-assert.deepEqual(LAYERS, [14, 12, 8, 2]);
-assert.equal(genomeSize(), 14 * 12 + 12 + 12 * 8 + 8 + 8 * 2 + 2);
+assert.deepEqual(LAYERS, [28, 12, 8, 2]);
+assert.equal(genomeSize(), 28 * 12 + 12 + 12 * 8 + 8 + 8 * 2 + 2);
 const easy = Level.preset('easy');
 assert.ok(easy.start && easy.goal && easy.blocks.length >= 4);
 assert.ok(Level.preset('gaps').blocks.some((b) => b.type === 'lava'));
@@ -13,8 +13,9 @@ assert.ok(Level.preset('obstacles').blocks.some((b) => b.type === 'saw'));
 const agent = createAgent(easy);
 const input = new Float32Array(LAYERS[0]);
 sense(agent, easy, input);
-assert.equal(input.length, 14);
-assert.equal(agent.rays.length, 8);
+assert.equal(input.length, 28);
+assert.equal(agent.rays.length, 18);
+assert.ok(input.slice(24).every(Number.isFinite));
 assert.ok(input.every(Number.isFinite));
 assert.equal(agent.rays[0].kind, 'solid', 'The starter preset contains a forward obstacle.');
 
@@ -26,7 +27,7 @@ const sensorLevel = {
 const sensorAgent = createAgent(sensorLevel);
 const sensorInput = new Float32Array(LAYERS[0]);
 sense(sensorAgent, sensorLevel, sensorInput);
-assert.equal(sensorAgent.rays.length, 8);
+assert.equal(sensorAgent.rays.length, 18);
 assert.equal(sensorAgent.rays[0].kind, 'solid', 'The forward ray must detect a wall.');
 assert.ok(sensorInput[6] > 0 && sensorInput[6] < 1, 'The wall distance must be normalized.');
 
@@ -46,6 +47,11 @@ const oldLength = LEGACY_LAYERS[0] * LEGACY_LAYERS[1] + LEGACY_LAYERS[1] + LEGAC
 const oldGenome = new Float32Array(oldLength).fill(0.125);
 const migrated = upgradeLegacyGenome(oldGenome);
 assert.equal(migrated.length, genomeSize());
+const previousLength = 14 * 12 + 12 + 12 * 8 + 8 + 8 * 2 + 2;
+const previousGenome = new Float32Array(previousLength).fill(0.25);
+const migratedPrevious = upgradeLegacyGenome(previousGenome);
+assert.equal(migratedPrevious.length, genomeSize());
+assert.equal(migratedPrevious[0], previousGenome[0]);
 assert.equal(migrated[0], oldGenome[0]);
 assert.equal(migrated[14 * 12], oldGenome[6 * 12]);
 const ga = new GA(99);

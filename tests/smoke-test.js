@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { C, createAgent, sense, stepAgent, fitness, BLOCK_TYPES } from '../js/engine.js';
+import { C, createAgent, sense, stepAgent, fitness, BLOCK_TYPES, assistControl } from '../js/engine.js';
 import { LAYERS, genomeSize, randomGenome, makeRng, forward, upgradeLegacyGenome, LEGACY_LAYERS } from '../js/nn.js';
 import { GA } from '../js/ai.js';
 import { Level } from '../js/level.js';
@@ -31,6 +31,9 @@ assert.equal(sensorAgent.rays.length, 18);
 assert.equal(sensorAgent.rays[0].kind, 'solid', 'The forward ray must detect a wall.');
 assert.ok(sensorAgent.rays[8].x2 < sensorAgent.rays[8].x1, 'The rear ray must point behind the agent.');
 assert.ok(sensorInput[6] > 0 && sensorInput[6] < 1, 'The wall distance must be normalized.');
+const wallReflex = assistControl(sensorAgent, sensorInput, new Float32Array([0.2, 0]));
+assert.equal(wallReflex.jump, true, 'The reflex controller should jump before a nearby wall.');
+assert.equal(wallReflex.assistedJump, true);
 
 const baselineFitness = fitness({ startDist: 100, bestDist: 80, exploration: 0, idle: 0 }, 1200);
 const exploredFitness = fitness({ startDist: 100, bestDist: 80, exploration: 2, idle: 0 }, 1200);
@@ -59,6 +62,11 @@ const ga = new GA(99);
 const genomes = ga.initialGenomes(6, migrated, 0.1);
 const next = ga.nextGeneration(genomes, genomes.map((_, i) => i), 6, 0.1);
 assert.equal(next.genomes.length, 6);
+assert.ok(next.genomes.every((g) => g.length === genomeSize()));
+const largeGa = new GA(100);
+const largeGenomes = largeGa.initialGenomes(16, migrated, 0.1);
+const largeNext = largeGa.nextGeneration(largeGenomes, largeGenomes.map((_, i) => i), 16, 0.1);
+assert.equal(largeNext.genomes.length, 16, 'Adaptive mutation and two elites must preserve population size.');
 assert.ok(Number.isFinite(fitness(agent, 1200)));
 stepAgent(agent, easy, { move: 1, jump: false }, 1);
 console.log('Ki-Evo smoke tests passed.');

@@ -181,11 +181,11 @@ import { Level, Editor } from './level.js';
       const control = assistControl(a, input, out);
       stepAgent(a, level, control, state.tick);
       if (a.alive && !a.finished) active++;
-      else if (fxOn) {
-        if (a.finished) spawnBurst(a.x + a.w / 2, a.y + a.h / 2, ['#ffc400', '#ff5252', '#4da3ff', '#5bd96b'], 14, 3.5);
-        else if (a.y < C.H) {
-          spawnBurst(a.x + a.w / 2, a.y + a.h / 2, [state.colors[i] || '#d94f4f', '#f2c48d', '#5d3d25'], 9, 2.8);
-          playDeathPop();
+      else {
+        if (!a.finished) playDeathPop();
+        if (fxOn) {
+          if (a.finished) spawnBurst(a.x + a.w / 2, a.y + a.h / 2, ['#ffc400', '#ff5252', '#4da3ff', '#5bd96b'], 14, 3.5);
+          else if (a.y < C.H) spawnBurst(a.x + a.w / 2, a.y + a.h / 2, [state.colors[i] || '#d94f4f', '#f2c48d', '#5d3d25'], 9, 2.8);
         }
       }
     }

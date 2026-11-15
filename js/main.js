@@ -1,6 +1,6 @@
 /* main.js — Anwendungsstart, Evolution, UI und Import/Export */
 import {
-  C, CATEGORIES, BLOCK_TYPES, createAgent, fitness as calcFitness, sense, stepAgent,
+  C, CATEGORIES, BLOCK_TYPES, createAgent, fitness as calcFitness, sense, stepAgent, assistControl,
   render as renderScene, drawBlock, spawnBurst, clearFx,
 } from './engine.js';
 import { LAYERS, genomeSize, forward, upgradeLegacyGenome } from './nn.js';
@@ -46,6 +46,40 @@ import { Level, Editor } from './level.js';
 
   // ---------- Toast / Overlay ----------
   let toastTimer = 0, overlayTimer = 0;
+  let deathAudioContext = null;
+  let lastDeathPopAt = 0;
+
+  function unlockDeathAudio() {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    try {
+      if (!deathAudioContext) deathAudioContext = new AudioCtx();
+      if (deathAudioContext.state === 'suspended') deathAudioContext.resume();
+    } catch (e) { /* Audio ist optional */ }
+  }
+
+  function playDeathPop() {
+    if (!deathAudioContext || deathAudioContext.state !== 'running') return;
+    const nowMs = performance.now();
+    if (nowMs - lastDeathPopAt < 90) return;
+    lastDeathPopAt = nowMs;
+    try {
+      const now = deathAudioContext.currentTime;
+      const osc = deathAudioContext.createOscillator();
+      const gain = deathAudioContext.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(390, now);
+      osc.frequency.exponentialRampToValueAtTime(105, now + 0.105);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.12, now + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
+      osc.connect(gain);
+      gain.connect(deathAudioContext.destination);
+      osc.start(now);
+      osc.stop(now + 0.14);
+      osc.onended = () => { osc.disconnect(); gain.disconnect(); };
+    } catch (e) { /* Audio-Fehler darf das Training nicht stoppen */ }
+  }
   function toast(text, ms) {
     const t = $('toast');
     t.textContent = text;
@@ -105,6 +139,7 @@ import { Level, Editor } from './level.js';
   }
 
   function startTraining() {
+    unlockDeathAudio();
     if (!levelReady()) { toast('Bitte zuerst Start und Ziel setzen.', 2600); return; }
     state.popSize = settings.pop();
     state.ga = new GA((Date.now() ^ 0x9e3779b9) >>> 0);
@@ -143,11 +178,15 @@ import { Level, Editor } from './level.js';
       if (!a.alive || a.finished) continue;
       sense(a, level, input);
       forward(state.genomes[i], input, out);
-      stepAgent(a, level, { move: out[0], jump: out[1] > 0.5 }, state.tick);
+      const control = assistControl(a, input, out);
+      stepAgent(a, level, control, state.tick);
       if (a.alive && !a.finished) active++;
       else if (fxOn) {
         if (a.finished) spawnBurst(a.x + a.w / 2, a.y + a.h / 2, ['#ffc400', '#ff5252', '#4da3ff', '#5bd96b'], 14, 3.5);
-        else if (a.y < C.H) spawnBurst(a.x + a.w / 2, a.y + a.h / 2, [state.colors[i] || '#d94f4f', '#f2c48d', '#5d3d25'], 9, 2.8);
+        else if (a.y < C.H) {
+          spawnBurst(a.x + a.w / 2, a.y + a.h / 2, [state.colors[i] || '#d94f4f', '#f2c48d', '#5d3d25'], 9, 2.8);
+          playDeathPop();
+        }
       }
     }
     state.tick++;

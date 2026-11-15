@@ -31,6 +31,7 @@ assert.equal(sensorAgent.rays.length, 18);
 assert.equal(sensorAgent.rays[0].kind, 'solid', 'The forward ray must detect a wall.');
 assert.ok(sensorAgent.rays[8].x2 < sensorAgent.rays[8].x1, 'The rear ray must point behind the agent.');
 assert.ok(sensorInput[6] > 0 && sensorInput[6] < 1, 'The wall distance must be normalized.');
+sensorAgent.onGround = true; // Reflexsprünge werden nur am Boden ausgelöst.
 const wallReflex = assistControl(sensorAgent, sensorInput, new Float32Array([0.2, 0]));
 assert.equal(wallReflex.jump, true, 'The reflex controller should jump before a nearby wall.');
 assert.equal(wallReflex.assistedJump, true);

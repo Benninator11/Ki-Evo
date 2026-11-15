@@ -17,6 +17,8 @@ Ki-Evo ist ein browserbasiertes Neuroevolution-Experiment. Du baust eigene Platt
 - **Genetischer Algorithmus:** Turnierselektion, uniformes Crossover, Gauß-Mutation und Elitismus.
 - **Fitness-Funktion:** Fortschritt zum Ziel, Erkundung neuer Bereiche, Stillstandsstrafe und Zielbonus.
 - **Umweg-Hilfe:** Bei hohen Wänden auf der direkten Route suchen Agenten erst einen Rückweg bzw. Abstieg, statt dauerhaft gegen die Wand zu springen.
+- **Neue Spezialblöcke:** Super-Trampolin, Turbo-Bänder in beide Richtungen und Klebeschleim.
+- **Neue Gefahren:** Feuer, Stromfelder, Säure und Laser-Barrieren.
 - **Training:** Populationsgröße, Mutationsrate, Simulationsgeschwindigkeit und Zeitlimit einstellen.
 - **Statistiken:** Generation, aktive Population, beste Fitness, Rekord, Zielerreichung und Fitness-Verlauf.
 - **Import / Export:** Level und trainierte KI als JSON speichern und wieder laden.

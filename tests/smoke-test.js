@@ -10,6 +10,10 @@ const easy = Level.preset('easy');
 assert.ok(easy.start && easy.goal && easy.blocks.length >= 4);
 assert.ok(Level.preset('gaps').blocks.some((b) => b.type === 'lava'));
 assert.ok(Level.preset('obstacles').blocks.some((b) => b.type === 'saw'));
+assert.equal(BLOCK_TYPES.superBounce.kind, 'bounce');
+assert.equal(BLOCK_TYPES.boostR.kind, 'conveyor');
+assert.equal(BLOCK_TYPES.fire.kind, 'deadly');
+assert.equal(BLOCK_TYPES.laser.kind, 'deadly');
 const agent = createAgent(easy);
 const input = new Float32Array(LAYERS[0]);
 sense(agent, easy, input);
@@ -89,6 +93,17 @@ const largeNext = largeGa.nextGeneration(largeGenomes, largeGenomes.map((_, i) =
 assert.equal(largeNext.genomes.length, 16, 'Adaptive mutation and two elites must preserve population size.');
 assert.ok(Number.isFinite(fitness(agent, 1200)));
 stepAgent(agent, easy, { move: 1, jump: false }, 1);
+
+const specialLevel = { start: { x: 0, y: 0, w: 40, h: 40 }, goal: { x: 1000, y: 0, w: 40, h: 60 }, blocks: [{ type: 'superBounce', x: 100, y: 200, w: 60, h: 20, solid: true }] };
+const bouncingAgent = createAgent(specialLevel);
+bouncingAgent.x = 110; bouncingAgent.y = 173; bouncingAgent.vy = 2;
+stepAgent(bouncingAgent, specialLevel, { move: 0, jump: false }, 2);
+assert.equal(bouncingAgent.vy, -16, 'Super trampolines should launch higher than normal trampolines.');
+const hazardLevel = { ...specialLevel, blocks: [{ type: 'electric', x: 100, y: 100, w: 60, h: 50, solid: true }] };
+const hazardAgent = createAgent(hazardLevel);
+hazardAgent.x = 110; hazardAgent.y = 110;
+stepAgent(hazardAgent, hazardLevel, { move: 0, jump: false }, 3);
+assert.equal(hazardAgent.alive, false, 'New hazards must use the normal deadly collision path.');
 
 // Live-Editor: eine Änderung muss dieselben Agenten weiterverwenden und sie
 // sofort aus neuen festen Blöcken herauslösen, ohne die Generation zu spawnen.

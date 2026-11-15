@@ -133,6 +133,50 @@
     return a;
   };
 
+  // Nach einer Live-Änderung im Editor dürfen Agenten nie in einem neu
+  // platzierten festen Block stecken bleiben. Sie werden zur nächstgelegenen
+  // freien Kante herausgeschoben; ist das in einem dichten Blockstapel nicht
+  // möglich, scheidet der Agent kontrolliert aus statt die Physik zu brechen.
+  export function reconcileAgentAfterLevelEdit(a, level, tick) {
+    if (!a || !a.alive || a.finished) return a;
+    const solids = level.blocks.filter((b) => b.solid !== false && SOLID_KINDS[kindOf(b)]);
+    for (let pass = 0; pass < solids.length + 2; pass++) {
+      const block = solids.find((b) => overlap(a, b));
+      if (!block) break;
+      const choices = [
+        { axis: 'x', value: block.x - a.w, distance: a.x + a.w - block.x },
+        { axis: 'x', value: block.x + block.w, distance: block.x + block.w - a.x },
+        { axis: 'y', value: block.y - a.h, distance: a.y + a.h - block.y },
+        { axis: 'y', value: block.y + block.h, distance: block.y + block.h - a.y },
+      ].filter((choice) => choice.value >= (choice.axis === 'x' ? 0 : 0)
+        && choice.value <= (choice.axis === 'x' ? C.W - a.w : C.H - a.h));
+      if (!choices.length) { kill(a, 'Level geändert', tick); return a; }
+      choices.sort((left, right) => left.distance - right.distance);
+      const choice = choices[0];
+      a[choice.axis] = choice.value;
+      if (choice.axis === 'x') a.vx = 0;
+      else { a.vy = 0; a.onGround = choice.value === block.y - a.h; }
+    }
+    if (solids.some((b) => overlap(a, b))) { kill(a, 'Level geändert', tick); return a; }
+
+    // Gefahren gelten sofort. Das verhindert, dass ein Agent einen Tick lang
+    // in einer gerade gesetzten Gefahr weiterläuft.
+    for (const block of level.blocks) {
+      if (block.solid === false) continue;
+      const def = BLOCK_TYPES[block.type];
+      if (def && def.kind === 'deadly' && overlap(a, hazardBounds(block, def))) {
+        kill(a, def.label, tick);
+        break;
+      }
+    }
+    return a;
+  }
+
+  export function reconcileAgentsAfterLevelEdit(agents, level, tick) {
+    for (const agent of agents) reconcileAgentAfterLevelEdit(agent, level, tick);
+    return agents;
+  }
+
   // Fitness belohnt echten Ziel-Fortschritt, Vorwärtskommen und Erkundung.
   export const fitness = function (a, maxTicks) {
     const progress = Math.max(0, a.startDist - a.bestDist);

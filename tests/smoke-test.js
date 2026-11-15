@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { C, createAgent, sense, stepAgent, fitness, BLOCK_TYPES, assistControl } from '../js/engine.js';
+import { C, createAgent, sense, stepAgent, fitness, BLOCK_TYPES, assistControl, reconcileAgentsAfterLevelEdit } from '../js/engine.js';
 import { LAYERS, genomeSize, randomGenome, makeRng, forward, upgradeLegacyGenome, LEGACY_LAYERS } from '../js/nn.js';
 import { GA } from '../js/ai.js';
 import { Level } from '../js/level.js';
@@ -70,4 +70,24 @@ const largeNext = largeGa.nextGeneration(largeGenomes, largeGenomes.map((_, i) =
 assert.equal(largeNext.genomes.length, 16, 'Adaptive mutation and two elites must preserve population size.');
 assert.ok(Number.isFinite(fitness(agent, 1200)));
 stepAgent(agent, easy, { move: 1, jump: false }, 1);
+
+// Live-Editor: eine Änderung muss dieselben Agenten weiterverwenden und sie
+// sofort aus neuen festen Blöcken herauslösen, ohne die Generation zu spawnen.
+const liveLevel = {
+  start: { x: 20, y: 100, w: 40, h: 40 },
+  goal: { x: 1000, y: 100, w: 40, h: 60 },
+  blocks: [],
+};
+const liveAgents = [createAgent(liveLevel), createAgent(liveLevel)];
+liveAgents[0].x = 200; liveAgents[0].y = 200;
+liveAgents[1].x = 300; liveAgents[1].y = 200;
+const firstLiveAgent = liveAgents[0];
+liveLevel.blocks.push({ type: 'wall', x: 190, y: 190, w: 60, h: 60, solid: true });
+reconcileAgentsAfterLevelEdit(liveAgents, liveLevel, 42);
+assert.strictEqual(liveAgents[0], firstLiveAgent, 'Live edits must not respawn the population.');
+assert.equal(liveAgents[0].alive, true, 'An agent overlapping a new solid should be ejected safely.');
+assert.equal(liveAgents[0].x < 190 || liveAgents[0].x + liveAgents[0].w > 250 || liveAgents[0].y < 190 || liveAgents[0].y + liveAgents[0].h > 250, true, 'The agent must no longer overlap the new solid.');
+liveLevel.blocks.push({ type: 'lava', x: liveAgents[1].x, y: liveAgents[1].y, w: 60, h: 40, solid: true });
+reconcileAgentsAfterLevelEdit(liveAgents, liveLevel, 43);
+assert.equal(liveAgents[1].alive, false, 'An agent inside a newly placed hazard must be removed immediately.');
 console.log('Ki-Evo smoke tests passed.');

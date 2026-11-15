@@ -10,7 +10,7 @@ Ki-Evo ist ein browserbasiertes Neuroevolution-Experiment. Du baust eigene Platt
 
 ## Funktionen
 
-- **Level-Editor:** Plattformen, Wände, Spezialblöcke und Gefahren platzieren, verschieben, skalieren und bearbeiten.
+- **Live-Level-Editor:** Plattformen, Wände, Spezialblöcke und Gefahren auch während des Trainings platzieren, auswählen, verschieben, skalieren und löschen – ohne Generations-Neustart.
 - **Drei Start-Level:** „Einfacher Sprung“, „Abgründe“ und „Hindernisparcours“ als auswählbare Vorlagen.
 - **Acht Raycast-Sensoren:** Die Agenten erfassen Hindernisse, Gefahren und den Boden vor sich. Die Sichtstrahlen des aktuell besten Agenten können direkt im Level angezeigt werden.
 - **Neuronales Netz:** Live-Visualisierung der Schichten `14 → 12 → 8 → 2`. Aktivierte positive Beiträge werden grün, negative rot dargestellt.
@@ -50,6 +50,7 @@ Oder du verwendest direkt die [GitHub-Pages-Demo](https://benninator11.github.io
 - Vorhandene Blöcke anklicken, um Typ, Größe, Farbe und Kollisionsverhalten zu ändern.
 - Die Ecke unten rechts eines ausgewählten Blocks dient zum Skalieren.
 - Mit **Entf**, Rechtsklick oder **Block löschen** den ausgewählten Block entfernen.
+- Während des Trainings bleiben Palette und Block-Menü aktiv. Änderungen gelten sofort für alle laufenden Agenten; Agenten in neu gesetzten festen Blöcken werden sicher herausgeschoben, Agenten in neuen Gefahren scheiden sofort aus.
 - **Start setzen** und **Ziel setzen** aktivieren den jeweiligen Platzierungsmodus.
 - Unter **Beispiel-Level** eine der drei Vorlagen auswählen und mit **Beispiel-Level laden** übernehmen.
 

@@ -251,7 +251,12 @@ import { C, BLOCK_TYPES, overlap } from './engine.js';
           self.clampBlock(s);
           d.moved = true;
         }
-        if (d.moved) self.onSelect(s, true);
+        if (d.moved) {
+          self.onSelect(s, true);
+          // Live-Editor: Bewegungen gelten schon während des Ziehens für die
+          // laufende Simulation, nicht erst beim Loslassen der Maustaste.
+          self.onChange();
+        }
       });
 
       const end = () => {

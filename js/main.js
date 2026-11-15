@@ -1,7 +1,7 @@
 /* main.js — Anwendungsstart, Evolution, UI und Import/Export */
 import {
   C, CATEGORIES, BLOCK_TYPES, createAgent, fitness as calcFitness, sense, stepAgent, assistControl,
-  render as renderScene, drawBlock, spawnBurst, clearFx,
+  render as renderScene, drawBlock, spawnBurst, clearFx, reconcileAgentsAfterLevelEdit,
 } from './engine.js';
 import { LAYERS, genomeSize, forward, upgradeLegacyGenome } from './nn.js';
 import { GA } from './ai.js';
@@ -113,11 +113,10 @@ import { Level, Editor } from './level.js';
 
   function onLevelChanged() {
     saveLevelSoon();
-    if (state.genomes.length) {
-      // Level geändert -> aktuelle Generation neu starten, alter Rekord ist nicht mehr vergleichbar
-      if (state.ga) state.ga.resetBestFitness();
-      spawn();
-    }
+    // Live-Änderungen sind Teil derselben Generation. Alle Agenten behalten
+    // Genome, Tick-Zähler und Fortschritt; nur ungültige Überlappungen werden
+    // sofort und sicher bereinigt.
+    if (state.mode !== 'edit' && state.agents.length) reconcileAgentsAfterLevelEdit(state.agents, L(), state.tick);
     updateUI();
   }
 
@@ -385,13 +384,16 @@ import { Level, Editor } from './level.js';
   }
 
   function updateUI() {
-    const locked = state.mode === 'running';
+    const live = state.mode === 'running';
     const btn = $('btnPlay');
     btn.textContent = state.mode === 'edit' ? '▶ Start' : state.mode === 'running' ? '⏸ Pause' : '▶ Weiter';
     $('btnNext').disabled = state.mode === 'edit';
-    for (const id of ['btnPlaceStart', 'btnPlaceGoal', 'btnExample', 'btnClearLevel', 'btnDelete']) $(id).disabled = locked;
-    document.querySelectorAll('.tile').forEach((t) => { t.draggable = !locked; t.classList.toggle('disabled', locked); });
-    $('editorPanel').title = locked ? 'Zum Bearbeiten zuerst pausieren' : '';
+    // Der Editor bleibt auch während des Trainings bedienbar. Vorlagen und
+    // "Level leeren" behalten ihr bisheriges Verhalten (sie pausieren).
+    for (const id of ['btnPlaceStart', 'btnPlaceGoal', 'btnDelete']) $(id).disabled = false;
+    for (const id of ['btnExample', 'btnClearLevel']) $(id).disabled = false;
+    document.querySelectorAll('.tile').forEach((t) => { t.draggable = true; t.classList.remove('disabled'); });
+    $('editorPanel').title = live ? 'Live-Editor: Änderungen gelten sofort für diese Generation' : '';
     updateInfo();
   }
 
@@ -512,7 +514,7 @@ import { Level, Editor } from './level.js';
     Editor.init({
       canvas,
       level,
-      isLocked: () => state.mode === 'running',
+      isLocked: () => false,
       onChange: onLevelChanged,
       onSelect: refreshProps,
       onArm: refreshArm,
@@ -566,8 +568,8 @@ import { Level, Editor } from './level.js';
     }
 
     // Editor-Buttons
-    $('btnPlaceStart').onclick = () => { if (state.mode !== 'running') Editor.arm(Editor.armed && Editor.armed.kind === 'start' ? null : { kind: 'start' }); };
-    $('btnPlaceGoal').onclick = () => { if (state.mode !== 'running') Editor.arm(Editor.armed && Editor.armed.kind === 'goal' ? null : { kind: 'goal' }); };
+    $('btnPlaceStart').onclick = () => { Editor.arm(Editor.armed && Editor.armed.kind === 'start' ? null : { kind: 'start' }); };
+    $('btnPlaceGoal').onclick = () => { Editor.arm(Editor.armed && Editor.armed.kind === 'goal' ? null : { kind: 'goal' }); };
     $('chkGrid').onchange = (e) => { Editor.gridOn = e.target.checked; };
     $('btnDelete').onclick = () => Editor.deleteSelected();
     $('btnExample').onclick = () => applyLevel(Level.preset($('levelPreset').value));
@@ -578,7 +580,7 @@ import { Level, Editor } from './level.js';
     };
 
     // Block-Menü
-    const withSel = (fn) => () => { const s = Editor.selected; if (s && typeof s !== 'string' && state.mode !== 'running') { fn(s); Editor.clampBlock(s); Editor.onChange(); } };
+    const withSel = (fn) => () => { const s = Editor.selected; if (s && typeof s !== 'string') { fn(s); Editor.clampBlock(s); Editor.onChange(); } };
     sel.onchange = withSel((b) => {
       const oldDef = BLOCK_TYPES[b.type];
       b.type = sel.value;

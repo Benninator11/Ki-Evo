@@ -124,6 +124,7 @@
       exploration: 0,
       rays: [],
       sensorValues: null,
+      navigation: { blockedTicks: 0, detourTicks: 0, detourStartX: 0, detourDirection: 0 },
     };
     a.startDist = distToGoal(a, level.goal);
     a.bestDist = a.startDist;
@@ -323,20 +324,57 @@
   };
   export { SENSOR_RAYS };
 
+  function blockingWallAhead(agent, level, direction) {
+    if (!level) return null;
+    const ax = agent.x + agent.w / 2;
+    const goalX = level.goal.x + level.goal.w / 2;
+    for (const block of level.blocks) {
+      if (block.solid === false || !SOLID_KINDS[kindOf(block)]) continue;
+      const ahead = direction > 0 ? block.x >= ax && block.x < goalX : block.x + block.w <= ax && block.x + block.w > goalX;
+      if (!ahead) continue;
+      // Niedrige Blöcke werden weiterhin übersprungen. Eine hohe Wand kann
+      // dagegen nicht mit einem direkten Sprung überwunden werden.
+      const overlapsRoute = block.y < agent.y + agent.h && block.y + block.h > agent.y - 8;
+      if (overlapsRoute && (block.h >= 100 || block.y < agent.y - 55)) return block;
+    }
+    return null;
+  }
+
   // Reflexhilfe für nahe Hindernisse und Abgründe; die Netzwerkausgabe bleibt beteiligt.
-  export function assistControl(agent, input, neuralOut) {
+  // Bei einer hohen Wand wird nicht stur weiter zum Ziel gedrückt: Der Agent
+  // geht erst ein Stück zurück und sucht damit einen Abstieg bzw. Umweg.
+  export function assistControl(agent, input, neuralOut, level) {
     const goalDirection = input[24] >= 0 ? 1 : -1;
     let move = neuralOut[0] * 0.62 + goalDirection * 0.38;
     if (goalDirection > 0 && move < 0.16) move = 0.16;
     if (goalDirection < 0 && move > -0.16) move = -0.16;
+    move = Math.max(-1, Math.min(1, move));
+    const nav = agent.navigation || (agent.navigation = { blockedTicks: 0, detourTicks: 0, detourStartX: agent.x, detourDirection: 0 });
+    const wall = blockingWallAhead(agent, level, goalDirection);
+    if (nav.detourTicks > 0) {
+      nav.detourTicks--;
+      if (Math.abs(agent.x - nav.detourStartX) >= 110) nav.detourTicks = 0;
+    } else if (wall && Math.abs(agent.vx) < 0.35) {
+      nav.blockedTicks++;
+      if (nav.blockedTicks >= 18) {
+        nav.detourDirection = -goalDirection;
+        nav.detourStartX = agent.x;
+        nav.detourTicks = 100;
+        nav.blockedTicks = 0;
+      }
+    } else if (!wall) {
+      nav.blockedTicks = 0;
+    }
+    const detouring = nav.detourTicks > 0;
+    if (detouring) move = nav.detourDirection;
     move = Math.max(-1, Math.min(1, move));
     const nearSolid = input[6] > 0 && input[6] < 0.72;
     const nearHazard = (input[6] < 0 && Math.abs(input[6]) < 0.82)
       || (input[10] < 0 && Math.abs(input[10]) < 0.82)
       || (input[18] < 0 && Math.abs(input[18]) < 0.82);
     const missingGround = input[12] < -0.95 || input[21] < -0.95;
-    const assistedJump = agent.onGround && (nearSolid || nearHazard || missingGround);
-    return { move, jump: neuralOut[1] > 0.56 || assistedJump, assistedJump };
+    const assistedJump = !detouring && agent.onGround && (nearSolid || nearHazard || missingGround);
+    return { move, jump: !detouring && (neuralOut[1] > 0.56 || assistedJump), assistedJump, detouring };
   }
 
   function kindOf(b) {

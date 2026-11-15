@@ -177,7 +177,7 @@ import { Level, Editor } from './level.js';
       if (!a.alive || a.finished) continue;
       sense(a, level, input);
       forward(state.genomes[i], input, out);
-      const control = assistControl(a, input, out);
+      const control = assistControl(a, input, out, level);
       stepAgent(a, level, control, state.tick);
       if (a.alive && !a.finished) active++;
       else {

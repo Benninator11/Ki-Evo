@@ -36,6 +36,25 @@ const wallReflex = assistControl(sensorAgent, sensorInput, new Float32Array([0.2
 assert.equal(wallReflex.jump, true, 'The reflex controller should jump before a nearby wall.');
 assert.equal(wallReflex.assistedJump, true);
 
+// Eine hohe Wand auf der direkten Zielroute löst nach kurzem Prüfen einen
+// kontrollierten Umweg aus, statt endlos gegen die Wand zu springen.
+const detourLevel = {
+  start: { x: 20, y: 500, w: 40, h: 40 },
+  goal: { x: 500, y: 500, w: 40, h: 60 },
+  blocks: [{ type: 'wall', x: 100, y: 300, w: 40, h: 260, solid: true }],
+};
+const detourAgent = createAgent(detourLevel);
+detourAgent.x = 70; detourAgent.y = 500; detourAgent.onGround = true; detourAgent.vx = 0;
+const detourInput = new Float32Array(LAYERS[0]);
+let detourControl;
+for (let tick = 0; tick < 19; tick++) {
+  sense(detourAgent, detourLevel, detourInput);
+  detourControl = assistControl(detourAgent, detourInput, new Float32Array([1, 1]), detourLevel);
+}
+assert.equal(detourControl.detouring, true, 'A tall wall must activate route searching.');
+assert.ok(detourControl.move < 0, 'Route searching must move away from the blocked direct route.');
+assert.equal(detourControl.jump, false, 'The agent must not keep jumping into the wall while detouring.');
+
 const baselineFitness = fitness({ startDist: 100, bestDist: 80, exploration: 0, idle: 0 }, 1200);
 const exploredFitness = fitness({ startDist: 100, bestDist: 80, exploration: 2, idle: 0 }, 1200);
 const idleFitness = fitness({ startDist: 100, bestDist: 80, exploration: 0, idle: 100 }, 1200);

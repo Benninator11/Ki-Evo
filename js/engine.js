@@ -127,17 +127,22 @@
     };
     a.startDist = distToGoal(a, level.goal);
     a.bestDist = a.startDist;
+    a.startX = a.x + a.w / 2;
+    a.bestX = a.startX;
     a.visitedCells.add(Math.floor((a.x + a.w / 2) / 80) + ',' + Math.floor((a.y + a.h / 2) / 80));
     return a;
   };
 
-  // Fitness: Fortschritt Richtung Ziel + (kleiner) Zeitbonus + großer Bonus beim Ziel
+  // Fitness belohnt echten Ziel-Fortschritt, Vorwärtskommen und Erkundung.
   export const fitness = function (a, maxTicks) {
     const progress = Math.max(0, a.startDist - a.bestDist);
-    const exploration = Math.min(a.exploration || 0, 24) * 4;
-    const inactivityPenalty = Math.min(a.idle || 0, C.STUCK_TICKS) * 0.18;
-    let score = progress + exploration - inactivityPenalty;
-    if (a.finished) score += 1000 + (maxTicks - a.finishTick) * 0.5;
+    const forwardProgress = Math.max(0, (a.bestX || 0) - (a.startX || 0));
+    const exploration = Math.min(a.exploration || 0, 32) * 1.8;
+    const inactivityPenalty = Math.min(a.idle || 0, C.STUCK_TICKS) * 0.22;
+    const survivalBonus = Math.min(a.ticks || 0, 360) * 0.025;
+    const deathPenalty = a.alive || a.finished ? 0 : 8;
+    let score = progress * 1.25 + forwardProgress * 0.28 + exploration + survivalBonus - inactivityPenalty - deathPenalty;
+    if (a.finished) score += 1500 + (maxTicks - a.finishTick) * 0.65;
     return score;
   };
 
@@ -274,6 +279,21 @@
   };
   export { SENSOR_RAYS };
 
+  // Reflexhilfe für nahe Hindernisse und Abgründe; die Netzwerkausgabe bleibt beteiligt.
+  export function assistControl(agent, input, neuralOut) {
+    const goalDirection = input[24] >= 0 ? 1 : -1;
+    let move = neuralOut[0] * 0.62 + goalDirection * 0.38;
+    if (goalDirection > 0 && move < 0.16) move = 0.16;
+    if (goalDirection < 0 && move > -0.16) move = -0.16;
+    move = Math.max(-1, Math.min(1, move));
+    const nearSolid = input[6] > 0 && input[6] < 0.72;
+    const nearHazard = (input[6] < 0 && Math.abs(input[6]) < 0.82)
+      || (input[10] < 0 && Math.abs(input[10]) < 0.82)
+      || (input[18] < 0 && Math.abs(input[18]) < 0.82);
+    const missingGround = input[12] < -0.95 || input[21] < -0.95;
+    const assistedJump = agent.onGround && (nearSolid || nearHazard || missingGround);
+    return { move, jump: neuralOut[1] > 0.56 || assistedJump, assistedJump };
+  }
 
   function kindOf(b) {
     const d = BLOCK_TYPES[b.type];
@@ -397,6 +417,7 @@
     }
 
     // Fortschritt / Stillstand
+    a.bestX = Math.max(a.bestX || a.x, a.x + a.w / 2);
     const cell = Math.floor((a.x + a.w / 2) / 80) + ',' + Math.floor((a.y + a.h / 2) / 80);
     const exploredNewCell = !a.visitedCells.has(cell);
     if (exploredNewCell) {

@@ -1093,11 +1093,38 @@
     const base = b.color || def.color;
     ctx.save();
     if (b.solid === false) ctx.globalAlpha = 0.45;
+
+    // Einheitliches Finish für alle Bauteile: weicher Bodenschatten,
+    // dezente Lichtkante und dunkle Materialkante – passend zum Level-Look.
+    const rounded = ['spike','spikeDown','thorns','fire','electric','laser'].includes(def.style) ? 2 : 5;
+    ctx.shadowColor = 'rgba(7, 13, 22, .38)';
+    ctx.shadowBlur = 5;
+    ctx.shadowOffsetY = 2;
     if (def.anim) {
       ctx.translate(b.x, b.y);
       ST[def.style](ctx, b.w, b.h, base, t, def);
     } else {
       ctx.drawImage(getSprite(b, def, base), b.x, b.y, b.w, b.h);
+    }
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+
+    // Glanzkante oben und feine Außenkontur lassen die Blöcke auch bei
+    // kleinen Größen und in der Palette klarer und hochwertiger wirken.
+    ctx.beginPath();
+    if (typeof rr === 'function') rr(ctx, b.x + 0.75, b.y + 0.75, Math.max(0, b.w - 1.5), Math.max(0, b.h - 1.5), rounded);
+    else ctx.rect(b.x + 0.75, b.y + 0.75, Math.max(0, b.w - 1.5), Math.max(0, b.h - 1.5));
+    ctx.strokeStyle = 'rgba(8, 14, 24, .42)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    if (b.h >= 8 && b.w >= 8) {
+      ctx.beginPath();
+      ctx.moveTo(b.x + rounded, b.y + 1.5);
+      ctx.lineTo(b.x + b.w - rounded, b.y + 1.5);
+      ctx.strokeStyle = 'rgba(255,255,255,.34)';
+      ctx.lineWidth = Math.min(2, Math.max(1, b.h / 18));
+      ctx.stroke();
     }
     ctx.restore();
   }

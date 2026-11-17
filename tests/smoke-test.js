@@ -10,6 +10,17 @@ const easy = Level.preset('easy');
 assert.ok(easy.start && easy.goal && easy.blocks.length >= 4);
 assert.ok(Level.preset('gaps').blocks.some((b) => b.type === 'lava'));
 assert.ok(Level.preset('obstacles').blocks.some((b) => b.type === 'saw'));
+const exampleLevels = Level.presets();
+assert.equal(exampleLevels.length, 50, 'The editor should offer 50 additional example levels.');
+assert.equal(new Set(exampleLevels.map((level) => level.id)).size, 50, 'Every example level needs a unique id.');
+for (const preset of exampleLevels) {
+  const generated = Level.preset(preset.id);
+  assert.ok(generated.start && generated.goal, preset.id + ' needs start and goal markers.');
+  assert.ok(generated.blocks.length >= 8, preset.id + ' should contain a meaningful course.');
+  assert.ok(generated.blocks.every((block) => BLOCK_TYPES[block.type]), preset.id + ' must only use known block types.');
+  assert.ok(generated.blocks.every((block) => block.x >= 0 && block.y >= 0 && block.x + block.w <= C.W && block.y + block.h <= C.H), preset.id + ' blocks must stay inside the level.');
+}
+assert.notDeepEqual(Level.preset('level-1').blocks, Level.preset('level-50').blocks, 'Difficulty tiers should produce different layouts.');
 assert.equal(BLOCK_TYPES.superBounce.kind, 'bounce');
 assert.equal(BLOCK_TYPES.boostR.kind, 'conveyor');
 assert.equal(BLOCK_TYPES.fire.kind, 'deadly');

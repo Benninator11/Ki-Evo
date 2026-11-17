@@ -567,6 +567,33 @@ import { Level, Editor } from './level.js';
       }
     }
 
+    // 50 zusätzliche Beispiel-Level, nach Schwierigkeitsgrad gruppiert.
+    const presetSelect = $('levelPreset');
+    const legacyOptions = Array.from(presetSelect.options).map((o) => ({ value: o.value, text: o.textContent }));
+    presetSelect.replaceChildren();
+    const legacyGroup = document.createElement('optgroup');
+    legacyGroup.label = 'Klassische Beispiele';
+    legacyOptions.forEach((item) => {
+      const option = document.createElement('option');
+      option.value = item.value;
+      option.textContent = item.text;
+      legacyGroup.appendChild(option);
+    });
+    presetSelect.appendChild(legacyGroup);
+    const presetGroups = new Map();
+    for (const item of Level.presets()) {
+      if (!presetGroups.has(item.category)) {
+        const group = document.createElement('optgroup');
+        group.label = item.category;
+        presetGroups.set(item.category, group);
+        presetSelect.appendChild(group);
+      }
+      const option = document.createElement('option');
+      option.value = item.id;
+      option.textContent = item.name;
+      presetGroups.get(item.category).appendChild(option);
+    }
+
     // Editor-Buttons
     $('btnPlaceStart').onclick = () => { Editor.arm(Editor.armed && Editor.armed.kind === 'start' ? null : { kind: 'start' }); };
     $('btnPlaceGoal').onclick = () => { Editor.arm(Editor.armed && Editor.armed.kind === 'goal' ? null : { kind: 'goal' }); };

@@ -27,24 +27,85 @@ import { C, BLOCK_TYPES, overlap } from './engine.js';
       };
     },
 
+    presets() {
+      return Array.from({ length: 50 }, (_, i) => {
+        const n = i + 1;
+        const tier = Math.floor(i / 10);
+        const names = ['Anfänger', 'Fortgeschritten', 'Schwer', 'Experte', 'Extrem'];
+        const themes = ['Wiesenpfad', 'Himmelsinseln', 'Ruinenlauf', 'Eispassage', 'Gefahrenlabor'];
+        return { id: 'level-' + n, name: String(n).padStart(2, '0') + ' · ' + themes[tier] + ' ' + ((i % 10) + 1), category: names[tier] };
+      });
+    },
+
     preset(id) {
       const B = (type, x, y, w, h) => ({ type, x, y, w, h, color: BLOCK_TYPES[type].color, solid: true });
-      const levels = {
-        easy: {
-          blocks: [B('ground', 0, 560, 430, 80), B('ground', 470, 560, 810, 80), B('brick', 230, 520, 40, 40), B('brick', 270, 480, 40, 80), B('spike', 360, 540, 40, 20), B('cloud', 620, 470, 120, 20)],
-          start: { x: 40, y: 520, w: C.START_SIZE.w, h: C.START_SIZE.h }, goal: { x: 1200, y: 500, w: C.GOAL_SIZE.w, h: C.GOAL_SIZE.h },
-        },
-        gaps: {
-          blocks: [B('ground', 0, 560, 260, 80), B('ground', 370, 560, 210, 80), B('ground', 700, 560, 205, 80), B('ground', 1030, 560, 250, 80), B('lava', 260, 610, 110, 30), B('lava', 580, 610, 120, 30), B('lava', 905, 610, 125, 30), B('cloud', 275, 470, 105, 18), B('cloud', 590, 445, 120, 18), B('cloud', 920, 470, 120, 18), B('spike', 175, 540, 40, 20), B('spike', 1080, 540, 40, 20)],
-          start: { x: 40, y: 520, w: C.START_SIZE.w, h: C.START_SIZE.h }, goal: { x: 1200, y: 500, w: C.GOAL_SIZE.w, h: C.GOAL_SIZE.h },
-        },
-        obstacles: {
-          blocks: [B('ground', 0, 560, 1280, 80), B('brick', 180, 520, 40, 40), B('brick', 220, 480, 40, 80), B('spike', 350, 540, 80, 20), B('saw', 500, 520, 40, 40), B('wall', 650, 440, 40, 120), B('platform', 735, 465, 135, 16), B('spike', 910, 540, 80, 20), B('convR', 1030, 540, 100, 20), B('metal', 1150, 480, 40, 80)],
-          start: { x: 40, y: 520, w: C.START_SIZE.w, h: C.START_SIZE.h }, goal: { x: 1200, y: 460, w: C.GOAL_SIZE.w, h: C.GOAL_SIZE.h },
-        },
+      const legacy = {
+        easy: [B('ground', 0, 560, 430, 80), B('ground', 470, 560, 810, 80), B('brick', 230, 520, 40, 40), B('brick', 270, 480, 40, 80), B('spike', 360, 540, 40, 20), B('cloud', 620, 470, 120, 20)],
+        gaps: [B('ground', 0, 560, 260, 80), B('ground', 370, 560, 210, 80), B('ground', 700, 560, 205, 80), B('ground', 1030, 560, 250, 80), B('lava', 260, 610, 110, 30), B('lava', 580, 610, 120, 30), B('lava', 905, 610, 125, 30), B('cloud', 275, 470, 105, 18), B('cloud', 590, 445, 120, 18), B('cloud', 920, 470, 120, 18), B('spike', 175, 540, 40, 20), B('spike', 1080, 540, 40, 20)],
+        obstacles: [B('ground', 0, 560, 1280, 80), B('brick', 180, 520, 40, 40), B('brick', 220, 480, 40, 80), B('spike', 350, 540, 80, 20), B('saw', 500, 520, 40, 40), B('wall', 650, 440, 40, 120), B('platform', 735, 465, 135, 16), B('spike', 910, 540, 80, 20), B('convR', 1030, 540, 100, 20), B('metal', 1150, 480, 40, 80)]
       };
-      const selected = levels[id] || levels.easy;
-      return JSON.parse(JSON.stringify(selected));
+      if (legacy[id]) return {
+        blocks: JSON.parse(JSON.stringify(legacy[id])),
+        start: { x: 40, y: 520, w: C.START_SIZE.w, h: C.START_SIZE.h },
+        goal: { x: 1200, y: 500, w: C.GOAL_SIZE.w, h: C.GOAL_SIZE.h }
+      };
+
+      const match = /^level-(\\d+)$/.exec(id || '');
+      const n = match ? Math.max(1, Math.min(50, +match[1])) : 1;
+      const tier = Math.floor((n - 1) / 10);
+      const variant = (n - 1) % 10;
+      const blocks = [];
+      const floorY = 560;
+      const add = (type, x, y, w, h) => blocks.push(B(type, x, y, w, h));
+      // Der durchgehende Boden hält die Level lösbar; die Hindernisse und
+      // erhöhten Wege erzeugen pro Vorlage andere Sprung- und Routenmuster.
+      add(['ground','sand','moss','snow','metal'][tier], 0, floorY, 1280, 80);
+      const hazardSets = [
+        ['spike','spike','saw'], ['lava','spike','fire'], ['water','thorns','saw'],
+        ['electric','acid','spikeDown'], ['laser','poison','fire']
+      ];
+      const hazards = hazardSets[tier];
+      const spacing = 105 - tier * 7;
+      for (let j = 0; j < 4 + tier; j++) {
+        const x = 170 + j * spacing + ((variant * 19 + j * 13) % 31);
+        const type = hazards[(j + variant) % hazards.length];
+        const def = BLOCK_TYPES[type];
+        const y = type === 'spikeDown' ? 410 + (j % 2) * 25 : 540;
+        add(type, Math.min(1190 - def.w, x), y, def.w, def.h);
+      }
+      const platforms = ['cloud','platform','steel','bridge'];
+      for (let j = 0; j < 3 + tier; j++) {
+        const x = 260 + j * (150 - tier * 9) + ((variant * 23 + j * 17) % 35);
+        const y = 455 - ((j + variant) % 3) * (24 + tier * 5);
+        add(platforms[(j + variant + tier) % platforms.length], Math.min(1160, x), y, 100 + ((j + variant) % 2) * 40, 16);
+      }
+      const solids = ['brick','wood','wall','metal','crystal','obsidian'];
+      for (let j = 0; j < tier + (variant % 3); j++) {
+        const x = 390 + j * 175 + ((variant * 11) % 25);
+        add(solids[(j + variant + tier) % solids.length], Math.min(1160, x), 480 - (j % 2) * 40, 40, 80);
+      }
+      if (tier >= 1) {
+        add(variant % 2 ? 'convR' : 'convL', 80 + variant * 7, 540, 100, 20);
+        add(variant % 3 ? 'bounce' : 'superBounce', 760 + (variant % 3) * 45, 540, 60, 20);
+      }
+      if (tier >= 2) {
+        add(variant % 2 ? 'ice' : 'mud', 520, 520, 120, 40);
+        add('spikeDown', 880, 390 + (variant % 2) * 25, 40, 20);
+      }
+      if (tier >= 3) {
+        add('boostR', 180, 540, 100, 20);
+        add('laser', 1010, 405 + (variant % 3) * 20, 20, 120);
+      }
+      if (tier >= 4) {
+        add('acid', 600, 540, 80, 30);
+        add('saw', 700, 485, 40, 40);
+        add('fire', 1120, 500, 60, 30);
+      }
+      return {
+        blocks,
+        start: { x: 40, y: 520, w: C.START_SIZE.w, h: C.START_SIZE.h },
+        goal: { x: 1200, y: 500, w: C.GOAL_SIZE.w, h: C.GOAL_SIZE.h }
+      };
     },
 
     toJSON(level) {

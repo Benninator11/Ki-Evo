@@ -15,23 +15,77 @@ assert.ok(Level.preset('obstacles').blocks.some((b) => b.type === 'saw'));
 const exampleLevels = Level.presets();
 assert.equal(exampleLevels.length, 15, 'The editor should offer exactly 15 example levels.');
 assert.equal(new Set(exampleLevels.map((level) => level.id)).size, 15, 'Every example level needs a unique id.');
+function jumpHorizontalReach(fromY, toY, jumpSpeed) {
+  const gravity = C.GRAVITY;
+  const rise = fromY - toY;
+  const maxRise = (jumpSpeed * jumpSpeed) / (2 * gravity);
+  if (rise > maxRise - 8) return -1;
+  const flightTicks = rise >= 0
+    ? (jumpSpeed + Math.sqrt(Math.max(0, jumpSpeed * jumpSpeed - 2 * gravity * rise))) / gravity
+    : (jumpSpeed + Math.sqrt(jumpSpeed * jumpSpeed + 2 * gravity * -rise)) / gravity;
+  return Math.max(0, C.MAX_SPEED * flightTicks - 16);
+}
+
+function hasReachablePresetRoute(course) {
+  const supports = course.blocks
+    .filter((block) => BLOCK_TYPES[block.type] && BLOCK_TYPES[block.type].kind !== 'deadly')
+    .map((block, index) => ({ ...block, index }));
+  const starts = supports.filter((surface) =>
+    Math.abs(surface.y - (course.start.y + course.start.h)) <= 1
+    && course.start.x + course.start.w > surface.x
+    && course.start.x < surface.x + surface.w
+  );
+  const goalSurfaces = supports.filter((surface) =>
+    course.goal.x + course.goal.w > surface.x
+    && course.goal.x < surface.x + surface.w
+    && course.goal.y < surface.y
+    && course.goal.y + course.goal.h > surface.y - C.AGENT_H
+  );
+  const visited = new Set(starts.map((surface) => surface.index));
+  const queue = [...starts];
+  while (queue.length) {
+    const from = queue.shift();
+    const info = BLOCK_TYPES[from.type];
+    const jumpSpeed = info.kind === 'bounce'
+      ? Math.abs(info.bounce || C.BOUNCE)
+      : Math.abs(C.JUMP);
+    for (const to of supports) {
+      if (visited.has(to.index)) continue;
+      const horizontalGap = Math.max(
+        0,
+        to.x - (from.x + from.w),
+        from.x - (to.x + to.w)
+      );
+      if (horizontalGap <= jumpHorizontalReach(from.y, to.y, jumpSpeed)) {
+        visited.add(to.index);
+        queue.push(to);
+      }
+    }
+  }
+  return goalSurfaces.some((surface) => visited.has(surface.index));
+}
+
+const routeSignatures = new Set();
 for (const preset of exampleLevels) {
   const course = Level.preset(preset.id);
   assert.ok(course.start && course.goal, preset.id + ' needs start and goal markers.');
-  assert.ok(course.blocks.length >= 4, preset.id + ' should contain a meaningful course.');
+  assert.ok(course.blocks.length >= 8, preset.id + ' should have a detailed, authored course.');
   assert.ok(course.blocks.every((block) => BLOCK_TYPES[block.type]), preset.id + ' must only use known block types.');
   assert.ok(course.blocks.every((block) => block.x >= 0 && block.y >= 0 && block.x + block.w <= C.W && block.y + block.h <= C.H), preset.id + ' blocks must stay inside the level.');
   assert.ok(course.start.x !== course.goal.x || course.start.y !== course.goal.y, preset.id + ' needs a real route.');
-  assert.ok(course.blocks.some((b) => BLOCK_TYPES[b.type].kind === 'oneway'), preset.id + ' should use designed platforms.');
+  assert.ok(hasReachablePresetRoute(course), preset.id + ' must have a route whose jumps fit the game's physics.');
+  routeSignatures.add(JSON.stringify({
+    start: course.start, goal: course.goal,
+    blocks: course.blocks.map(({type,x,y,w,h}) => [type,x,y,w,h])
+  }));
 }
-assert.equal(new Set(exampleLevels.map((level) => JSON.stringify(Level.preset(level.id)))).size, 15, 'All 15 complete level layouts and marker positions must be unique.');
-assert.deepEqual(exampleLevels.map((level) => Level.preset(level.id).blocks.length).length, 15, 'Every preset ID must resolve to a real layout.');
-assert.ok(exampleLevels.some((level) => Level.preset(level.id).goal.y < Level.preset(level.id).start.y), 'Some courses should climb upward.');
-assert.ok(exampleLevels.some((level) => Level.preset(level.id).goal.y > Level.preset(level.id).start.y), 'Some courses should descend.');
-assert.ok(exampleLevels.some((level) => {
-  const ys = Level.preset(level.id).blocks.filter((b) => ['platform','bridge','cloud','steel'].includes(b.type)).map((b) => b.y);
-  return ys.length >= 4 && Math.max(...ys) - Math.min(...ys) >= 120;
-}), 'Some courses should have substantial vertical routes.');
+assert.equal(routeSignatures.size, 15, 'All 15 routes, start/goal positions, and layouts must be individually unique.');
+assert.ok(exampleLevels.some((item) => Level.preset(item.id).goal.y < Level.preset(item.id).start.y), 'Some courses should climb.');
+assert.ok(exampleLevels.some((item) => Level.preset(item.id).goal.y > Level.preset(item.id).start.y), 'Some courses should descend.');
+assert.ok(exampleLevels.some((item) => {
+  const heights = Level.preset(item.id).blocks.filter((block) => ['platform','bridge','cloud','steel'].includes(block.type)).map((block) => block.y);
+  return heights.length >= 5 && Math.max(...heights) - Math.min(...heights) >= 160;
+}), 'The collection should contain strong vertical routes.');
 assert.equal(BLOCK_TYPES.superBounce.kind, 'bounce');
 assert.equal(BLOCK_TYPES.boostR.kind, 'conveyor');
 assert.equal(BLOCK_TYPES.fire.kind, 'deadly');

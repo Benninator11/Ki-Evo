@@ -2,7 +2,7 @@
    Das Genom ist ein flaches Float32Array mit allen Gewichten/Biases.
    Layout je Schicht: erst Gewichte (in*out, zeilenweise je Ausgang), dann Biases (out). */
 
-  // Eingabe 28 -> 12 -> 8 -> Ausgabe 2 (Bewegung, springen)
+  // Eingabe 65 -> 12 -> 8 -> Ausgabe 2 (Bewegung, springen; inklusive semantischer Blocktypen)
   export const LAYERS = [65, 12, 8, 2];
 export const PREVIOUS_LAYERS = [28, 12, 8, 2];
 export const LEGACY_LAYERS = [14, 12, 8, 2];

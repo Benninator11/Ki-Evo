@@ -19,7 +19,7 @@ Ki-Evo ist ein browserbasiertes Neuroevolution-Experiment. Du baust eigene Platt
 - **Umweg-Hilfe:** Bei hohen Wänden auf der direkten Route suchen Agenten erst einen Rückweg bzw. Abstieg, statt dauerhaft gegen die Wand zu springen.
 - **Neue Spezialblöcke:** Super-Trampolin, Turbo-Bänder in beide Richtungen und Klebeschleim.
 - **Neue Gefahren:** Feuer, Stromfelder, Säure und Laser-Barrieren.
-- **Training:** Populationsgröße (maximal 75 KI-Agenten), Mutationsrate, Simulationsgeschwindigkeit und Zeitlimit einstellen.
+- **Training:** Bis zu 75 KI-Agenten, Mutationsrate, Simulationsgeschwindigkeit, Zeitlimit sowie Turniergröße, Elite-Anzahl, Crossover-Anteil, Mutationsstärke und adaptive Mutation bei Stillstand einstellen.
 - **Statistiken:** Generation, aktive Population, beste Fitness, Rekord, Zielerreichung und Fitness-Verlauf.
 - **Import / Export:** Level und trainierte KI als JSON speichern und wieder laden.
 - **Lokale Speicherung:** Level und beste KI werden zusätzlich im Browser gespeichert.
@@ -60,7 +60,7 @@ Oder du verwendest direkt die [GitHub-Pages-Demo](https://benninator11.github.io
 ### Training
 
 1. Ein Level laden oder Start, Ziel und Hindernisse selbst platzieren.
-2. Population, Mutationsrate, Geschwindigkeit und Zeitlimit einstellen.
+2. Population, Mutationsrate, Geschwindigkeit und Zeitlimit einstellen. Unter „Evolution & Strategie“ lassen sich zusätzlich Turniergröße, Elite-KIs, Crossover-Anteil, Mutationsstärke und die automatische Mutationssteigerung bei Stillstand abstimmen.
 3. **Start** drücken und die Agenten beobachten.
 4. Über **Raycasts im Level anzeigen** die Sichtstrahlen des aktuell besten Agenten ein- oder ausblenden.
 5. Im Netzwerkdiagramm verfolgen, welche Neuronen und Verbindungen gerade aktiv sind.

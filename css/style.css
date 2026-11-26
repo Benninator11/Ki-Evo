@@ -118,3 +118,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
   .topbar { align-items: flex-start; flex-direction: column; gap: 2px; }
   .toast { max-width: calc(100% - 20px); white-space: normal; text-align: center; }
 }
+/* Erweiterte Trainingsoptionen */
+#controlPanel { max-height: calc(100vh - 24px); overflow-y: auto; scrollbar-width: thin; }
+#controlPanel .hint { margin: 1px 0 5px; }
+#controlPanel input[type=number] { width: 100%; margin-top: 2px; }

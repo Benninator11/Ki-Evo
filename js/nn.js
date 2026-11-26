@@ -96,7 +96,10 @@ export function upgradeLegacyGenome(oldGenome) {
     const newLayer = oldLayer === oldLayers.length - 2 ? LAYERS.length - 2 : oldLayer;
     const oldIn = oldLayers[oldLayer], oldOut = oldLayers[oldLayer + 1];
     const newIn = LAYERS[newLayer], newOut = LAYERS[newLayer + 1];
-    const newOffset = genomeSizeFor(LAYERS.slice(0, newLayer + 1)) - LAYERS[newLayer + 1];
+    let newOffset = 0;
+    for (let priorLayer = 0; priorLayer < newLayer; priorLayer++) {
+      newOffset += LAYERS[priorLayer] * LAYERS[priorLayer + 1] + LAYERS[priorLayer + 1];
+    }
     const copyIn = Math.min(oldIn, newIn), copyOut = Math.min(oldOut, newOut);
     for (let neuron = 0; neuron < copyOut; neuron++) {
       for (let inputIndex = 0; inputIndex < copyIn; inputIndex++) {

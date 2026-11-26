@@ -12,7 +12,7 @@ Ki-Evo ist ein browserbasiertes Neuroevolution-Experiment. Du baust eigene Platt
 
 - **Live-Level-Editor:** Plattformen, Wände, Spezialblöcke und Gefahren auch während des Trainings platzieren, auswählen, verschieben, skalieren und löschen – ohne Generations-Neustart.
 - **Drei Start-Level:** „Einfacher Sprung“, „Abgründe“ und „Hindernisparcours“ als auswählbare Vorlagen.
-- **Acht Raycast-Sensoren:** Die Agenten erfassen Hindernisse, Gefahren und den Boden vor sich. Die Sichtstrahlen des aktuell besten Agenten können direkt im Level angezeigt werden.
+- **18 Raycast-Sensoren + semantische Blockerkennung:** Die Agenten erfassen Hindernisse, Gefahren und Bodenabdeckung. Zusätzlich erkennt das Netz den konkreten Blocktyp vor dem Agenten – z. B. Steinwand, Eis, Trampolin, Plattform, Lava, Wasser, Säge oder Laser – und erhält dessen Entfernung als eigene Eingaben. Die Sichtstrahlen des aktuell besten Agenten können direkt im Level angezeigt werden.
 - **Neuronales Netz:** Live-Visualisierung der Schichten `14 → 12 → 8 → 2`. Aktivierte positive Beiträge werden grün, negative rot dargestellt.
 - **Genetischer Algorithmus:** Turnierselektion, uniformes Crossover, Gauß-Mutation und Elitismus.
 - **Fitness-Funktion:** Fortschritt zum Ziel, Erkundung neuer Bereiche, Stillstandsstrafe und Zielbonus.
@@ -71,7 +71,7 @@ Eine Generation endet, wenn keine Agenten mehr aktiv sind oder das Zeitlimit err
 
 Das neuronale Netz hat die Schichten **14 → 12 → 8 → 2**.
 
-Die 14 Eingaben bestehen aus sechs Bewegungs- und Zielwerten sowie acht Raycast-Sensorwerten. Die Ausgaben steuern horizontale Bewegung und Springen.
+Das neuronale Netz nutzt die Architektur **65 → 12 → 8 → 2**. Die Eingaben enthalten sechs Bewegungs-/Positionswerte, 18 Raycast-Werte, vier Ziel-/Gefahrenwerte, einen One-hot-Vektor für alle 36 Blocktypen sowie die Entfernung zum nächsten erkannten Block vor dem Agenten. Die Ausgaben steuern horizontale Bewegung und Springen. Ältere KI-Dateien mit 6, 14 oder 28 Eingaben werden beim Import automatisch auf das neue Format migriert.
 
 Die Fitness berücksichtigt den erreichten Fortschritt zum Ziel, neu erkundete Bereiche, eine Strafe für längeren Stillstand und einen hohen Bonus für das Erreichen des Ziels.
 
@@ -114,7 +114,7 @@ Für die grundlegenden Funktionstests wird Node.js benötigt:
 npm run check
 ```
 
-Die Tests prüfen unter anderem die Netzwerkgröße, Sensorwerte und Raycasts, alle drei Level-Vorlagen, den Import alter Genome, den genetischen Algorithmus und einen Physikschritt.
+Die Tests prüfen unter anderem die Netzwerkgröße, semantische Blockerkennung, Sensorwerte und Raycasts, alle Level-Vorlagen, den Import alter Genome, den genetischen Algorithmus und einen Physikschritt.
 
 ## GitHub Pages
 

@@ -29,44 +29,50 @@ import { C, BLOCK_TYPES, overlap } from './engine.js';
 
     presets() {
       return [
-        ['level-1','01 · Erste Schritte','Einfach'],
-        ['level-2','02 · Kleine Stufe','Einfach'],
-        ['level-3','03 · Zwei Sprünge','Einfach'],
-        ['level-4','04 · Der erste Abgrund','Einfach'],
-        ['level-5','05 · Treppenpfad','Einfach'],
-        ['level-6','06 · Schmale Brücken','Fortgeschritten'],
-        ['level-7','07 · Sägewerk','Fortgeschritten'],
-        ['level-8','08 · Eisiger Aufstieg','Fortgeschritten'],
-        ['level-9','09 · Förderband-Chaos','Fortgeschritten'],
-        ['level-10','10 · Trampolinroute','Fortgeschritten'],
-        ['level-11','11 · Ruinen-Labyrinth','Schwer'],
-        ['level-12','12 · Laser-Korridor','Schwer'],
+        ['level-1','01 · Wiesen-Terrassen','Einfach'],
+        ['level-2','02 · Himmelsleiter','Einfach'],
+        ['level-3','03 · Talabstieg','Einfach'],
+        ['level-4','04 · Zickzack-Felsen','Einfach'],
+        ['level-5','05 · Inselkette','Fortgeschritten'],
+        ['level-6','06 · Brückenbruch','Fortgeschritten'],
+        ['level-7','07 · Sägewerk-Turm','Fortgeschritten'],
+        ['level-8','08 · Eisrinne','Fortgeschritten'],
+        ['level-9','09 · Förderband-Spirale','Fortgeschritten'],
+        ['level-10','10 · Trampolin-Turm','Fortgeschritten'],
+        ['level-11','11 · Ruinenbogen','Schwer'],
+        ['level-12','12 · Laser-Galerie','Schwer'],
         ['level-13','13 · Säurekammern','Sehr schwer'],
-        ['level-14','14 · Das Prüfungsfeld','Sehr schwer'],
-        ['level-15','15 · Der Evo-Gipfel','Extrem'],
+        ['level-14','14 · U-Tal','Sehr schwer'],
+        ['level-15','15 · Evo-Gipfel','Extrem'],
       ].map(([id, name, category]) => ({ id, name, category }));
     },
 
     preset(id) {
       const B = (type, x, y, w, h) => ({ type, x, y, w, h, color: BLOCK_TYPES[type].color, solid: true });
-      const match = /^level-(\d+)$/.exec(id || '');
+      const legacy = {
+        easy: [B('ground',0,560,430,80),B('ground',470,560,810,80),B('brick',230,520,40,40),B('brick',270,480,40,80),B('spike',360,540,40,20),B('cloud',620,470,120,20)],
+        gaps: [B('ground',0,560,260,80),B('ground',370,560,210,80),B('ground',700,560,205,80),B('ground',1030,560,250,80),B('lava',260,610,110,30),B('lava',580,610,120,30),B('lava',905,610,125,30),B('cloud',275,470,105,18),B('cloud',590,445,120,18),B('cloud',920,470,120,18),B('spike',175,540,40,20),B('spike',1080,540,40,20)],
+        obstacles: [B('ground',0,560,1280,80),B('brick',180,520,40,40),B('brick',220,480,40,80),B('spike',350,540,80,20),B('saw',500,520,40,40),B('wall',650,440,40,120),B('platform',735,465,135,16),B('spike',910,540,80,20),B('convR',1030,540,100,20),B('metal',1150,480,40,80)]
+      };
+      if (legacy[id]) return { blocks: JSON.parse(JSON.stringify(legacy[id])), start:{x:40,y:520,w:C.START_SIZE.w,h:C.START_SIZE.h}, goal:{x:1200,y:500,w:C.GOAL_SIZE.w,h:C.GOAL_SIZE.h} };
+      const match = /^level-(\\d+)$/.exec(id || '');
       const n = match ? Math.max(1, Math.min(15, +match[1])) : 1;
       const layouts = {
-        1: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1190,"y":480,"w":40,"h":60}, blocks:[["ground",0,560,300,80],["platform",300,500,130,16],["platform",470,450,130,16],["ground",650,500,220,140],["platform",900,450,130,16],["ground",1080,540,200,100]] },
-        2: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":750,"y":240,"w":40,"h":60}, blocks:[["ground",0,560,180,80],["platform",160,500,140,16],["platform",260,440,140,16],["platform",360,380,140,16],["platform",460,320,140,16],["platform",560,260,150,16],["platform",700,300,130,16],["ground",880,560,400,80]] },
-        3: { start:{"x":40,"y":260,"w":40,"h":40}, goal:{"x":1110,"y":500,"w":40,"h":60}, blocks:[["platform",0,300,180,16],["platform",150,360,140,16],["platform",290,420,140,16],["platform",430,480,150,16],["ground",600,540,220,100],["platform",820,500,130,16],["ground",990,560,290,80]] },
-        4: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1110,"y":460,"w":40,"h":60}, blocks:[["ground",0,560,220,80],["platform",210,500,130,16],["platform",360,440,130,16],["platform",510,500,130,16],["platform",660,440,130,16],["platform",810,500,130,16],["ground",960,520,320,120],["water",390,610,80,30],["water",690,610,80,30]] },
-        5: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1110,"y":500,"w":40,"h":60}, blocks:[["ground",0,560,170,80],["platform",130,500,150,16],["platform",270,440,150,16],["platform",130,380,150,16],["platform",270,320,150,16],["platform",410,260,150,16],["platform",570,220,150,16],["ground",760,560,520,80]] },
-        6: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1110,"y":440,"w":40,"h":60}, blocks:[["ground",0,560,170,80],["bridge",150,520,160,16],["platform",300,470,130,16],["bridge",420,430,170,16],["platform",580,380,130,16],["bridge",700,430,170,16],["platform",860,380,130,16],["ground",1010,500,270,140]] },
-        7: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":930,"y":180,"w":40,"h":60}, blocks:[["ground",0,560,180,80],["platform",150,500,160,16],["saw",280,470,40,40],["platform",330,430,160,16],["platform",510,360,160,16],["saw",650,330,40,40],["platform",690,300,160,16],["platform",870,240,160,16],["ground",1040,560,240,80]] },
-        8: { start:{"x":40,"y":220,"w":40,"h":40}, goal:{"x":1100,"y":500,"w":40,"h":60}, blocks:[["platform",0,260,170,16],["ice",150,320,120,40],["platform",260,380,150,16],["ice",400,440,120,40],["platform",540,500,150,16],["snow",700,540,180,100],["platform",880,500,140,16],["ground",1030,560,250,80]] },
-        9: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1110,"y":500,"w":40,"h":60}, blocks:[["ground",0,560,180,80],["convR",150,540,100,20],["platform",260,480,150,16],["convL",400,460,100,20],["platform",520,400,150,16],["boostR",670,380,100,20],["platform",790,320,150,16],["ground",970,560,310,80]] },
-        10: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":930,"y":180,"w":40,"h":60}, blocks:[["ground",0,560,200,80],["bounce",180,540,60,20],["platform",300,420,150,16],["platform",450,360,150,16],["superBounce",620,540,70,20],["platform",730,300,150,16],["platform",900,240,150,16],["ground",1070,560,210,80]] },
-        11: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":980,"y":160,"w":40,"h":60}, blocks:[["moss",0,560,180,80],["platform",150,500,150,16],["wall",290,440,40,60],["platform",330,430,150,16],["platform",480,360,150,16],["bridge",630,400,150,16],["platform",780,300,150,16],["platform",930,220,150,16],["moss",1080,560,200,80]] },
-        12: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1110,"y":500,"w":40,"h":60}, blocks:[["metal",0,560,180,80],["platform",160,500,150,16],["laser",300,440,20,60],["platform",360,430,150,16],["platform",520,370,150,16],["laser",680,310,20,60],["platform",740,310,150,16],["platform",900,370,150,16],["metal",1060,560,220,80]] },
-        13: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":930,"y":200,"w":40,"h":60}, blocks:[["ground",0,560,180,80],["platform",160,500,150,16],["acid",300,610,80,30],["platform",330,440,150,16],["thorns",480,400,40,40],["platform",520,380,150,16],["platform",690,320,150,16],["acid",850,610,80,30],["platform",870,260,150,16],["ground",1040,560,240,80]] },
-        14: { start:{"x":40,"y":220,"w":40,"h":40}, goal:{"x":1100,"y":480,"w":40,"h":60}, blocks:[["platform",0,260,160,16],["platform",150,320,150,16],["saw",280,350,40,40],["platform",310,390,150,16],["platform",470,450,150,16],["fire",610,500,60,30],["platform",650,510,150,16],["platform",820,450,150,16],["platform",980,500,150,16],["ground",1110,560,170,80]] },
-        15: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1110,"y":100,"w":40,"h":60}, blocks:[["ground",0,560,150,80],["platform",130,500,150,16],["platform",270,440,150,16],["platform",410,380,150,16],["platform",550,320,150,16],["platform",690,260,150,16],["platform",830,200,150,16],["platform",970,140,150,16],["platform",1100,120,150,16],["saw",610,285,40,35],["thorns",880,165,40,35]] },
+        1: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1190,"y":470,"w":40,"h":60}, blocks:[["ground",0,560,220,80],["platform",180,520,135,16],["platform",300,480,135,16],["sand",450,520,150,120],["platform",590,470,150,16],["ground",730,520,180,120],["platform",900,460,140,16],["ground",1060,520,220,120],["spike",370,540,40,20]] },
+        2: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1100,"y":90,"w":40,"h":60}, blocks:[["ground",0,560,150,80],["platform",130,500,150,16],["platform",260,440,150,16],["platform",390,380,150,16],["platform",520,320,150,16],["platform",650,260,150,16],["platform",780,220,150,16],["platform",910,180,170,16],["platform",1040,140,170,16],["cloud",480,260,100,18],["cloud",700,180,100,18]] },
+        3: { start:{"x":40,"y":220,"w":40,"h":40}, goal:{"x":1150,"y":470,"w":40,"h":60}, blocks:[["platform",0,260,170,16],["platform",140,320,150,16],["platform",280,380,150,16],["platform",420,440,150,16],["ground",550,500,180,140],["platform",700,440,150,16],["platform",840,380,150,16],["platform",980,320,150,16],["ground",1110,520,170,120],["water",350,610,80,30],["water",770,610,80,30]] },
+        4: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1070,"y":210,"w":40,"h":60}, blocks:[["ground",0,560,180,80],["platform",150,500,150,16],["platform",300,440,150,16],["platform",150,380,150,16],["platform",300,320,150,16],["platform",450,360,150,16],["platform",600,300,150,16],["platform",750,360,150,16],["platform",900,300,150,16],["platform",1050,260,150,16],["brick",510,520,40,40]] },
+        5: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1150,"y":450,"w":40,"h":60}, blocks:[["ground",0,560,140,80],["platform",160,520,110,16],["ground",300,540,100,100],["platform",420,480,110,16],["ground",560,520,100,120],["platform",680,460,110,16],["ground",820,500,100,140],["platform",940,440,110,16],["ground",1080,500,200,140],["acid",250,610,60,30],["acid",530,610,60,30],["lava",790,610,60,30]] },
+        6: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1130,"y":450,"w":40,"h":60}, blocks:[["ground",0,560,190,80],["bridge",180,520,150,16],["bridge",330,480,130,16],["platform",460,440,140,16],["bridge",600,460,130,16],["platform",730,420,140,16],["bridge",870,460,150,16],["ground",1010,520,270,120],["spike",520,520,40,20],["spike",780,520,40,20]] },
+        7: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1090,"y":170,"w":40,"h":60}, blocks:[["ground",0,560,150,80],["platform",130,500,140,16],["platform",260,440,150,16],["platform",400,380,150,16],["platform",540,320,150,16],["platform",680,380,150,16],["platform",820,320,150,16],["platform",960,260,150,16],["platform",1080,220,160,16],["saw",310,520,40,40],["saw",620,520,40,40],["saw",900,520,40,40],["brick",740,540,40,20]] },
+        8: { start:{"x":40,"y":200,"w":40,"h":40}, goal:{"x":1090,"y":470,"w":40,"h":60}, blocks:[["platform",0,240,160,16],["ice",150,300,110,40],["platform",250,360,150,16],["ice",390,420,110,40],["platform",500,480,150,16],["snow",650,520,180,120],["platform",820,460,150,16],["ground",960,520,320,120],["spikeDown",1120,380,40,20]] },
+        9: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1080,"y":210,"w":40,"h":60}, blocks:[["ground",0,560,180,80],["convR",160,540,100,20],["platform",260,480,130,16],["convL",390,460,100,20],["platform",500,400,130,16],["boostR",630,380,100,20],["platform",730,320,130,16],["convL",860,300,100,20],["platform",960,260,160,16],["ground",1110,560,170,80]] },
+        10: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1110,"y":150,"w":40,"h":60}, blocks:[["ground",0,560,230,80],["bounce",180,540,60,20],["platform",300,420,145,16],["platform",450,360,145,16],["superBounce",620,540,70,20],["platform",730,300,150,16],["platform",890,240,145,16],["platform",1040,200,170,16],["saw",500,520,40,40]] },
+        11: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1080,"y":220,"w":40,"h":60}, blocks:[["moss",0,560,160,80],["wall",140,520,70,40],["platform",220,470,140,16],["wall",350,430,70,40],["platform",430,390,140,16],["bridge",570,430,150,16],["wall",720,390,70,40],["platform",800,350,140,16],["wall",940,310,70,40],["platform",1020,270,180,16],["thorns",430,580,40,40]] },
+        12: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1140,"y":470,"w":40,"h":60}, blocks:[["metal",0,560,180,80],["platform",160,500,140,16],["laser",300,535,20,20],["platform",320,440,145,16],["platform",465,380,145,16],["laser",620,535,20,20],["platform",640,320,145,16],["platform",790,360,145,16],["platform",940,420,145,16],["ground",1080,520,200,120],["saw",500,540,40,40]] },
+        13: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1140,"y":470,"w":40,"h":60}, blocks:[["ground",0,560,170,80],["platform",160,500,150,16],["platform",310,460,150,16],["platform",460,500,150,16],["platform",610,440,150,16],["platform",760,480,150,16],["platform",910,420,150,16],["ground",1060,520,220,120],["acid",250,610,60,30],["acid",550,610,60,30],["acid",850,610,60,30]] },
+        14: { start:{"x":40,"y":220,"w":40,"h":40}, goal:{"x":1150,"y":210,"w":40,"h":60}, blocks:[["platform",0,260,160,16],["platform",140,320,150,16],["platform",280,380,150,16],["platform",420,440,150,16],["ground",560,500,180,140],["platform",700,440,150,16],["platform",840,380,150,16],["platform",980,320,150,16],["platform",1110,260,150,16],["water",470,610,80,30],["saw",780,560,40,40]] },
+        15: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1190,"y":30,"w":40,"h":60}, blocks:[["ground",0,560,150,80],["platform",130,510,150,16],["platform",270,460,150,16],["platform",410,410,150,16],["platform",270,350,150,16],["platform",410,290,150,16],["platform",550,240,150,16],["platform",690,190,150,16],["platform",830,150,150,16],["platform",970,110,150,16],["platform",1110,80,150,16],["saw",600,540,40,40],["thorns",890,560,40,40]] },
       };
       const layout = layouts[n];
       if (!layout) throw new Error('Unbekanntes Beispiel-Level: ' + id);

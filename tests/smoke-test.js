@@ -25,6 +25,7 @@ for (const preset of exampleLevels) {
   assert.ok(course.blocks.some((b) => BLOCK_TYPES[b.type].kind === 'oneway'), preset.id + ' should use designed platforms.');
 }
 assert.equal(new Set(exampleLevels.map((level) => JSON.stringify(Level.preset(level.id)))).size, 15, 'All 15 complete level layouts and marker positions must be unique.');
+assert.deepEqual(exampleLevels.map((level) => Level.preset(level.id).blocks.length).length, 15, 'Every preset ID must resolve to a real layout.');
 assert.ok(exampleLevels.some((level) => Level.preset(level.id).goal.y < Level.preset(level.id).start.y), 'Some courses should climb upward.');
 assert.ok(exampleLevels.some((level) => Level.preset(level.id).goal.y > Level.preset(level.id).start.y), 'Some courses should descend.');
 assert.ok(exampleLevels.some((level) => {

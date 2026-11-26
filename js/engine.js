@@ -335,7 +335,7 @@
 
     // Semantische Sicht: exakten Blocktyp vor dem Agenten als One-hot-Vektor
     // plus normierte Entfernung an das neuronale Netz weitergeben.
-    const forwardRayIndices = [0, 1, 2, 4, 5, 11, 12];
+    const forwardRayIndices = [0, 1, 2, 11];
     let nearestForward = null;
     for (const rayIndex of forwardRayIndices) {
       const ray = a.rays[rayIndex];

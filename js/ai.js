@@ -5,15 +5,26 @@ import { makeRng, randomGenome } from './nn.js';
 export const MAX_POPULATION = 75;
 
 
-  const TOURNAMENT_K = 3;
-  const MUT_SIGMA = 0.35;
+  const DEFAULT_OPTIONS = { tournamentSize: 3, eliteCount: 2, crossoverRate: 0.5, mutationStrength: 0.35, adaptiveMutation: true, stagnationGenerations: 6, stagnationBoost: 1.6 };
 
   export class GA {
-    constructor(seed) {
+    constructor(seed, options = {}) {
       this.rng = makeRng(seed);
+      this.options = { ...DEFAULT_OPTIONS, ...options };
+      this.configure(options);
       // bester je gesehener Agent für das aktuelle Level (nötig für Populationsgröße 1)
       this.best = { genome: null, fitness: -Infinity };
       this.stagnantGenerations = 0;
+    }
+
+    configure(options = {}) {
+      this.options = { ...this.options, ...options };
+      this.options.tournamentSize = Math.max(2, Math.min(8, Math.floor(this.options.tournamentSize || 3)));
+      this.options.eliteCount = Math.max(1, Math.min(8, Math.floor(this.options.eliteCount || 2)));
+      this.options.crossoverRate = Math.max(0, Math.min(1, Number(this.options.crossoverRate ?? 0.5)));
+      this.options.mutationStrength = Math.max(0.05, Math.min(1, Number(this.options.mutationStrength || 0.35)));
+      this.options.stagnationGenerations = Math.max(1, Math.min(30, Math.floor(this.options.stagnationGenerations || 6)));
+      this.options.stagnationBoost = Math.max(1, Math.min(3, Number(this.options.stagnationBoost || 1.6)));
     }
 
     initialGenomes(n, seedGenome, mutRate) {
@@ -29,20 +40,20 @@ export const MAX_POPULATION = 75;
     mutate(genome, rate) {
       const g = Float32Array.from(genome);
       for (let i = 0; i < g.length; i++) {
-        if (this.rng() < rate) g[i] += this.rng.gauss() * MUT_SIGMA;
+        if (this.rng() < rate) g[i] += this.rng.gauss() * this.options.mutationStrength;
       }
       return g;
     }
 
     crossover(a, b) {
       const c = new Float32Array(a.length);
-      for (let i = 0; i < c.length; i++) c[i] = this.rng() < 0.5 ? a[i] : b[i];
+      for (let i = 0; i < c.length; i++) c[i] = this.rng() < this.options.crossoverRate ? a[i] : b[i];
       return c;
     }
 
     tournament(fitness) {
       let best = -1;
-      for (let k = 0; k < TOURNAMENT_K; k++) {
+      for (let k = 0; k < Math.min(this.options.tournamentSize, fitness.length); k++) {
         const i = Math.floor(this.rng() * fitness.length);
         if (best < 0 || fitness[i] > fitness[best]) best = i;
       }
@@ -60,14 +71,15 @@ export const MAX_POPULATION = 75;
       } else {
         this.stagnantGenerations++;
       }
-      const adaptiveRate = Math.min(0.65, mutRate * (this.stagnantGenerations >= 6 ? 1.6 : 1));
+      const isStagnant = this.stagnantGenerations >= this.options.stagnationGenerations;
+      const adaptiveRate = Math.min(0.65, mutRate * (this.options.adaptiveMutation && isStagnant ? this.options.stagnationBoost : 1));
       const next = [];
       if (popSize < 2) {
         // Einzelner Agent: Hill-Climbing um den besten bekannten Stand
         next.push(this.mutate(this.best.genome, Math.max(adaptiveRate, 0.05)));
       } else {
         const ranked = fitness.map((value, index) => ({ value, index })).sort((a, b) => b.value - a.value);
-        const eliteCount = popSize >= 12 ? 2 : 1;
+        const eliteCount = Math.min(popSize - 1, this.options.eliteCount);
         for (let e = 0; e < eliteCount; e++) next.push(Float32Array.from(genomes[ranked[e].index]));
         while (next.length < popSize) {
           const pa = this.tournament(fitness);

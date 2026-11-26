@@ -66,6 +66,8 @@
     acid: T(G4, 'Säure', '#b6e834', 'deadly', 'acid', 80, 30, { shape: 'full', inset: 4, anim: true }),
     laser: T(G4, 'Laser-Barriere', '#ff315b', 'deadly', 'laser', 20, 120, { shape: 'full', inset: 3, anim: true }),
   };
+  export const BLOCK_TYPE_KEYS = Object.keys(BLOCK_TYPES);
+  const BLOCK_TYPE_INDEX = Object.fromEntries(BLOCK_TYPE_KEYS.map((key, index) => [key, index]));
   const SOLID_KINDS = { full: 1, ice: 1, mud: 1, bounce: 1, conveyor: 1 };
 
   // ---------- Hilfsfunktionen ----------
@@ -132,6 +134,7 @@
       exploration: 0,
       rays: [],
       sensorValues: null,
+      detectedBlock: null,
       navigation: { blockedTicks: 0, detourTicks: 0, detourStartX: 0, detourDirection: 0 },
     };
     a.startDist = distToGoal(a, level.goal);
@@ -266,6 +269,7 @@
     dx /= magnitude; dy /= magnitude;
     let bestDistance = config.length;
     let bestKind = 'none';
+    let bestBlock = null;
 
     for (const block of level.blocks) {
       if (block.solid === false) continue;
@@ -278,6 +282,7 @@
       if (distance !== null && distance < bestDistance) {
         bestDistance = distance;
         bestKind = deadly ? 'deadly' : 'solid';
+        bestBlock = block;
       }
     }
 
@@ -296,7 +301,7 @@
       : (config.down ? -1 : 1);
     return {
       value,
-      ray: { name: config.name, x1: ox, y1: oy, x2: ox + dx * bestDistance, y2: oy + dy * bestDistance, kind: bestKind, distance: bestDistance, length: config.length },
+      ray: { name: config.name, x1: ox, y1: oy, x2: ox + dx * bestDistance, y2: oy + dy * bestDistance, kind: bestKind, blockType: bestBlock ? bestBlock.type : null, blockLabel: bestBlock && BLOCK_TYPES[bestBlock.type] ? BLOCK_TYPES[bestBlock.type].label : null, distance: bestDistance, length: config.length },
     };
   }
 
@@ -327,6 +332,26 @@
     }
     out[26] = Math.max(0, Math.min(1, nearestDistance / DIAG));
     out[27] = nearestHazard ? Math.max(-1, Math.min(1, (nearestHazard.y - ay) / C.H)) : 0;
+
+    // Semantische Sicht: exakten Blocktyp vor dem Agenten als One-hot-Vektor
+    // plus normierte Entfernung an das neuronale Netz weitergeben.
+    const forwardRayIndices = [0, 1, 2, 4, 5, 11, 12];
+    let nearestForward = null;
+    for (const rayIndex of forwardRayIndices) {
+      const ray = a.rays[rayIndex];
+      if (!ray || ray.kind === 'none' || !ray.blockType) continue;
+      if (!nearestForward || ray.distance < nearestForward.distance) nearestForward = ray;
+    }
+    for (let i = 0; i < BLOCK_TYPE_KEYS.length; i++) out[28 + i] = 0;
+    if (nearestForward) {
+      const typeIndex = BLOCK_TYPE_INDEX[nearestForward.blockType];
+      if (typeIndex !== undefined) out[28 + typeIndex] = 1;
+      out[28 + BLOCK_TYPE_KEYS.length] = Math.max(0, Math.min(1, 1 - nearestForward.distance / nearestForward.length));
+      a.detectedBlock = { type: nearestForward.blockType, label: nearestForward.blockLabel, distance: nearestForward.distance };
+    } else {
+      out[28 + BLOCK_TYPE_KEYS.length] = 0;
+      a.detectedBlock = null;
+    }
     a.sensorValues = out;
     return out;
   };

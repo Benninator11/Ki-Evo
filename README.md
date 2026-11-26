@@ -130,3 +130,7 @@ Empfohlene Topics: `genetic-algorithm`, `neural-network`, `javascript`, `canvas`
 ## Lizenz
 
 Dieses Projekt steht unter der **MIT-Lizenz**. Siehe [LICENSE](LICENSE).
+
+
+### Physikalisch spielbare Beispiel-Level
+Alle 15 Beispiel-Level wurden an Sprunghöhe, Agentengröße und Kollisionsverhalten angepasst. Sie besitzen einen durchgehenden sicheren Boden, niedrige überspringbare Hindernisse und definierte Landezonen. Unüberwindbare Laserwände und hohe Sperrwände wurden aus den Vorlagen entfernt.

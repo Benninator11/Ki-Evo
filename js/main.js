@@ -4,7 +4,7 @@ import {
   render as renderScene, drawBlock, spawnBurst, clearFx, reconcileAgentsAfterLevelEdit,
 } from './engine.js';
 import { LAYERS, genomeSize, forward, upgradeLegacyGenome } from './nn.js';
-import { GA } from './ai.js';
+import { GA, MAX_POPULATION } from './ai.js';
 import { Level, Editor } from './level.js';
 
   const $ = (id) => document.getElementById(id);
@@ -98,7 +98,7 @@ import { Level, Editor } from './level.js';
 
   // ---------- Einstellungen ----------
   const settings = {
-    pop: () => +$('popRange').value,
+    pop: () => Math.max(1, Math.min(MAX_POPULATION, Math.floor(+$('popRange').value || 1))),
     mut: () => +$('mutRange').value / 100,
     speed: () => +$('speedRange').value,
     maxTicks: () => Math.round(Math.max(5, Math.min(120, +$('timeInput').value || 20)) * 60),
@@ -263,7 +263,8 @@ import { Level, Editor } from './level.js';
     const layers = Array.isArray(ai.layers) ? ai.layers.join(',') : '';
     if (genome.length === genomeSize() && (!layers || layers === LAYERS.join(','))) {
       // Aktuelles Format.
-    } else if (['28,12,8,2', '14,12,8,2', '6,12,8,2'].includes(layers)
+    } else if (['65,12,8,2', '28,12,8,2', '14,12,8,2', '6,12,8,2'].includes(layers)
+      || genome.length === 65 * 12 + 12 + 12 * 8 + 8 + 8 * 2 + 2
       || genome.length === 28 * 12 + 12 + 12 * 8 + 8 + 8 * 2 + 2
       || genome.length === 14 * 12 + 12 + 12 * 8 + 8 + 8 * 2 + 2
       || genome.length === 6 * 12 + 12 + 12 * 8 + 8 + 8 * 2 + 2) {
@@ -416,7 +417,7 @@ import { Level, Editor } from './level.js';
       c.fillText('Starte das Training, um das aktive neuronale Netz zu sehen.', W / 2, H / 2);
       return;
     }
-    const xPos = [86, 330, 575, 820];
+    const xPos = LAYERS.map((_, index) => 58 + index * (W - 140) / (LAYERS.length - 1));
     const layerNodes = LAYERS.map((count, layer) => Array.from({ length: count }, (_, i) => ({
       x: xPos[layer], y: (H - 46) * (i + 0.5) / count + 20,
     })));
@@ -446,14 +447,15 @@ import { Level, Editor } from './level.js';
         c.beginPath(); c.arc(node.x, node.y, layer === 0 ? 2.5 : 6.1, 0, Math.PI * 2); c.fill(); c.stroke();
       }
     }
-    const titles = [LAYERS[0] + ' Eingänge', '12 Neuronen', '8 Neuronen', 'Steuerung'];
+    const titles = LAYERS.map((count, index) => index === 0 ? count + ' Eingänge' : index === LAYERS.length - 1 ? 'Ausgabe' : count + ' Neuronen');
     c.font = '600 12px system-ui, sans-serif'; c.fillStyle = '#b9c4d2'; c.textAlign = 'center';
     titles.forEach((title, i) => c.fillText(title, xPos[i], 16));
     c.textAlign = 'left'; c.font = '8px system-ui, sans-serif'; c.fillStyle = '#8fb8d8';
     c.fillText('Eingänge: Position · Raycasts · Ziel · ' + BLOCK_TYPE_KEYS.length + ' Blocktypen + Distanz', 8, H - 5);
     c.textAlign = 'right'; c.fillStyle = '#e7ebf1';
-    c.fillText('Bewegung', W - 6, layerNodes[3][0].y + 3);
-    c.fillText('Springen', W - 6, layerNodes[3][1].y + 3);
+    const outputLayer = layerNodes[LAYERS.length - 1];
+    c.fillText('Bewegung', W - 6, outputLayer[0].y + 3);
+    c.fillText('Springen', W - 6, outputLayer[1].y + 3);
   }
 
   function drawChart() {

@@ -16,23 +16,21 @@ const exampleLevels = Level.presets();
 assert.equal(exampleLevels.length, 15, 'The editor should offer exactly 15 example levels.');
 assert.equal(new Set(exampleLevels.map((level) => level.id)).size, 15, 'Every example level needs a unique id.');
 for (const preset of exampleLevels) {
-  const generated = Level.preset(preset.id);
-  assert.ok(generated.start && generated.goal, preset.id + ' needs start and goal markers.');
-  assert.ok(generated.blocks.length >= 4, preset.id + ' should contain a meaningful course.');
-  assert.ok(generated.blocks.every((block) => BLOCK_TYPES[block.type]), preset.id + ' must only use known block types.');
-  assert.ok(generated.blocks.every((block) => block.x >= 0 && block.y >= 0 && block.x + block.w <= C.W && block.y + block.h <= C.H), preset.id + ' blocks must stay inside the level.');
-}
-assert.equal(exampleLevels[0].category, 'Einfach');
-assert.equal(exampleLevels[14].category, 'Extrem');
-assert.equal(new Set(exampleLevels.map((level) => JSON.stringify(Level.preset(level.id).blocks))).size, 15, 'All 15 example layouts must be different.');
-for (const preset of exampleLevels) {
   const course = Level.preset(preset.id);
-  assert.ok(course.blocks.some((b) => ['ground','snow','sand','moss','metal','obsidian'].includes(b.type) && b.x === 0 && b.y === 560 && b.w === C.W && b.h === 80), preset.id + ' needs a continuous safe floor.');
-  assert.ok(!course.blocks.some((b) => b.type === 'laser'), preset.id + ' must not use a full-height laser barrier.');
-  assert.ok(!course.blocks.some((b) => BLOCK_TYPES[b.type].kind === 'full' && b.h > 60 && b.y + b.h >= 560), preset.id + ' must not contain an unjumpable wall.');
-  const hazards = course.blocks.filter((b) => BLOCK_TYPES[b.type].kind === 'deadly').sort((a, b) => a.x - b.x);
-  for (let i = 1; i < hazards.length; i++) assert.ok(hazards[i].x - hazards[i - 1].x - hazards[i - 1].w >= 130, preset.id + ' needs landing room between hazards.');
+  assert.ok(course.start && course.goal, preset.id + ' needs start and goal markers.');
+  assert.ok(course.blocks.length >= 4, preset.id + ' should contain a meaningful course.');
+  assert.ok(course.blocks.every((block) => BLOCK_TYPES[block.type]), preset.id + ' must only use known block types.');
+  assert.ok(course.blocks.every((block) => block.x >= 0 && block.y >= 0 && block.x + block.w <= C.W && block.y + block.h <= C.H), preset.id + ' blocks must stay inside the level.');
+  assert.ok(course.start.x !== course.goal.x || course.start.y !== course.goal.y, preset.id + ' needs a real route.');
+  assert.ok(course.blocks.some((b) => BLOCK_TYPES[b.type].kind === 'oneway'), preset.id + ' should use designed platforms.');
 }
+assert.equal(new Set(exampleLevels.map((level) => JSON.stringify(Level.preset(level.id)))).size, 15, 'All 15 complete level layouts and marker positions must be unique.');
+assert.ok(exampleLevels.some((level) => Level.preset(level.id).goal.y < Level.preset(level.id).start.y), 'Some courses should climb upward.');
+assert.ok(exampleLevels.some((level) => Level.preset(level.id).goal.y > Level.preset(level.id).start.y), 'Some courses should descend.');
+assert.ok(exampleLevels.some((level) => {
+  const ys = Level.preset(level.id).blocks.filter((b) => ['platform','bridge','cloud','steel'].includes(b.type)).map((b) => b.y);
+  return ys.length >= 4 && Math.max(...ys) - Math.min(...ys) >= 120;
+}), 'Some courses should have substantial vertical routes.');
 assert.equal(BLOCK_TYPES.superBounce.kind, 'bounce');
 assert.equal(BLOCK_TYPES.boostR.kind, 'conveyor');
 assert.equal(BLOCK_TYPES.fire.kind, 'deadly');

@@ -3,9 +3,10 @@
    Layout je Schicht: erst Gewichte (in*out, zeilenweise je Ausgang), dann Biases (out). */
 
   // Eingabe 28 -> 12 -> 8 -> Ausgabe 2 (Bewegung, springen)
-  export const LAYERS = [28, 12, 8, 2];
-export const PREVIOUS_LAYERS = [14, 12, 8, 2];
-export const LEGACY_LAYERS = [6, 12, 8, 2];
+  export const LAYERS = [65, 12, 8, 2];
+export const PREVIOUS_LAYERS = [28, 12, 8, 2];
+export const LEGACY_LAYERS = [14, 12, 8, 2];
+export const OLDEST_LAYERS = [6, 12, 8, 2];
 
   export function genomeSize() {
     let n = 0;
@@ -77,9 +78,9 @@ export const LEGACY_LAYERS = [6, 12, 8, 2];
   }
 
 
-// Migriert ältere 6- oder 14-Eingabe-Netze auf die aktuelle 28-Sensor-Architektur.
+// Migriert ältere 6-, 14- oder 28-Eingabe-Netze auf die semantische 65-Eingabe-Architektur.
 export function upgradeLegacyGenome(oldGenome) {
-  const layouts = [PREVIOUS_LAYERS, LEGACY_LAYERS];
+  const layouts = [PREVIOUS_LAYERS, LEGACY_LAYERS, OLDEST_LAYERS];
   const oldLayers = layouts.find((layers) => {
     const size = layers[0] * layers[1] + layers[1]
       + layers[1] * layers[2] + layers[2]

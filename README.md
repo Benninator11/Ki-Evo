@@ -13,13 +13,13 @@ Ki-Evo ist ein browserbasiertes Neuroevolution-Experiment. Du baust eigene Platt
 - **Live-Level-Editor:** Plattformen, Wände, Spezialblöcke und Gefahren auch während des Trainings platzieren, auswählen, verschieben, skalieren und löschen – ohne Generations-Neustart.
 - **Drei Start-Level:** „Einfacher Sprung“, „Abgründe“ und „Hindernisparcours“ als auswählbare Vorlagen.
 - **18 Raycast-Sensoren + semantische Blockerkennung:** Die Agenten erfassen Hindernisse, Gefahren und Bodenabdeckung. Zusätzlich erkennt das Netz den konkreten Blocktyp vor dem Agenten – z. B. Steinwand, Eis, Trampolin, Plattform, Lava, Wasser, Säge oder Laser – und erhält dessen Entfernung als eigene Eingaben. Die Sichtstrahlen des aktuell besten Agenten können direkt im Level angezeigt werden.
-- **Neuronales Netz:** Live-Visualisierung der Schichten `65 → 12 → 8 → 2`. Aktivierte positive Beiträge werden grün, negative rot dargestellt.
+- **Neuronales Netz:** Live-Visualisierung der Schichten `65 → 32 → 24 → 12 → 2`. Aktivierte positive Beiträge werden grün, negative rot dargestellt.
 - **Genetischer Algorithmus:** Turnierselektion, uniformes Crossover, Gauß-Mutation und Elitismus.
 - **Fitness-Funktion:** Fortschritt zum Ziel, Erkundung neuer Bereiche, Stillstandsstrafe und Zielbonus.
 - **Umweg-Hilfe:** Bei hohen Wänden auf der direkten Route suchen Agenten erst einen Rückweg bzw. Abstieg, statt dauerhaft gegen die Wand zu springen.
 - **Neue Spezialblöcke:** Super-Trampolin, Turbo-Bänder in beide Richtungen und Klebeschleim.
 - **Neue Gefahren:** Feuer, Stromfelder, Säure und Laser-Barrieren.
-- **Training:** Populationsgröße, Mutationsrate, Simulationsgeschwindigkeit und Zeitlimit einstellen.
+- **Training:** Populationsgröße (maximal 75 KI-Agenten), Mutationsrate, Simulationsgeschwindigkeit und Zeitlimit einstellen.
 - **Statistiken:** Generation, aktive Population, beste Fitness, Rekord, Zielerreichung und Fitness-Verlauf.
 - **Import / Export:** Level und trainierte KI als JSON speichern und wieder laden.
 - **Lokale Speicherung:** Level und beste KI werden zusätzlich im Browser gespeichert.
@@ -69,13 +69,13 @@ Eine Generation endet, wenn keine Agenten mehr aktiv sind oder das Zeitlimit err
 
 ## KI-Architektur
 
-Das neuronale Netz nutzt die Architektur **65 → 12 → 8 → 2**. Die Eingaben enthalten sechs Bewegungs-/Positionswerte, 18 Raycast-Werte, vier Ziel-/Gefahrenwerte, einen One-hot-Vektor für alle 36 Blocktypen sowie die Entfernung zum nächsten erkannten Block vor dem Agenten. Die Ausgaben steuern horizontale Bewegung und Springen. Ältere KI-Dateien mit 6, 14 oder 28 Eingaben werden beim Import automatisch auf das neue Format migriert.
+Das neuronale Netz nutzt die tiefere Architektur **65 → 32 → 24 → 12 → 2** mit drei versteckten Schichten und insgesamt 3.230 trainierbaren Gewichten und Biases. Dadurch kann es die 65 Sensorwerte in mehreren Verarbeitungsschritten kombinieren, statt sie nur durch zwei kleine versteckte Schichten zu leiten. Die Eingaben enthalten sechs Bewegungs-/Positionswerte, 18 Raycast-Werte, vier Ziel-/Gefahrenwerte, einen One-hot-Vektor für alle 36 Blocktypen sowie die Entfernung zum nächsten erkannten Block vor dem Agenten. Die Ausgaben steuern horizontale Bewegung und Springen. Ältere KI-Dateien mit 6, 14, 28 oder 65 Eingaben (frühere Architektur `65 → 12 → 8 → 2`) werden beim Import automatisch auf das neue Format migriert; vorhandene passende Gewichte bleiben erhalten und zusätzliche Neuronen werden initialisiert.
 
 Die Fitness berücksichtigt den erreichten Fortschritt zum Ziel, neu erkundete Bereiche, eine Strafe für längeren Stillstand und einen hohen Bonus für das Erreichen des Ziels.
 
 ### Kompatibilität älterer KI-Dateien
 
-KI-Dateien aus den früheren Architekturen `6 → 12 → 8 → 2`, `14 → 12 → 8 → 2` und `28 → 12 → 8 → 2` können weiterhin importiert werden. Vorhandene Gewichte bleiben erhalten; die neuen Blocktyp-Eingänge werden beim Laden neutral initialisiert.
+KI-Dateien aus den früheren Architekturen `6 → 12 → 8 → 2`, `14 → 12 → 8 → 2`, `28 → 12 → 8 → 2` und `65 → 12 → 8 → 2` können weiterhin importiert werden. Vorhandene Gewichte werden soweit passend übernommen; neue Neuronen erhalten kleine Startgewichte, damit sie direkt am Training teilnehmen können.
 
 ## Projektstruktur
 

@@ -25,8 +25,14 @@ for (const preset of exampleLevels) {
 assert.equal(exampleLevels[0].category, 'Einfach');
 assert.equal(exampleLevels[14].category, 'Extrem');
 assert.equal(new Set(exampleLevels.map((level) => JSON.stringify(Level.preset(level.id).blocks))).size, 15, 'All 15 example layouts must be different.');
-assert.ok(Level.preset('level-15').blocks.some((b) => b.type === 'laser'));
-assert.ok(Level.preset('level-15').blocks.some((b) => b.type === 'acid'));
+for (const preset of exampleLevels) {
+  const course = Level.preset(preset.id);
+  assert.ok(course.blocks.some((b) => b.type === 'ground' || b.type === 'snow' || b.type === 'sand' || b.type === 'moss' || b.type === 'metal' || b.type === 'obsidian' && b.x === 0 && b.y === 560 && b.w === C.W), preset.id + ' needs a safe floor.');
+  assert.ok(!course.blocks.some((b) => b.type === 'laser'), preset.id + ' must not use a full-height laser barrier.');
+  assert.ok(!course.blocks.some((b) => BLOCK_TYPES[b.type].kind === 'full' && b.h > 60 && b.y + b.h >= 560), preset.id + ' must not contain an unjumpable wall.');
+  const hazards = course.blocks.filter((b) => BLOCK_TYPES[b.type].kind === 'deadly').sort((a, b) => a.x - b.x);
+  for (let i = 1; i < hazards.length; i++) assert.ok(hazards[i].x - hazards[i - 1].x - hazards[i - 1].w >= 130, preset.id + ' needs landing room between hazards.');
+}
 assert.equal(BLOCK_TYPES.superBounce.kind, 'bounce');
 assert.equal(BLOCK_TYPES.boostR.kind, 'conveyor');
 assert.equal(BLOCK_TYPES.fire.kind, 'deadly');

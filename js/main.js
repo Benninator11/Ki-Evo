@@ -443,17 +443,14 @@ import { Level, Editor } from './level.js';
         const alpha = Math.min(1, 0.35 + Math.abs(value) * 0.65);
         c.fillStyle = value >= 0 ? `rgba(55,210,125,${alpha})` : `rgba(255,90,90,${alpha})`;
         c.strokeStyle = '#dce5ef'; c.lineWidth = 1;
-        c.beginPath(); c.arc(node.x, node.y, layer === 0 ? 5.2 : 6.1, 0, Math.PI * 2); c.fill(); c.stroke();
+        c.beginPath(); c.arc(node.x, node.y, layer === 0 ? 2.5 : 6.1, 0, Math.PI * 2); c.fill(); c.stroke();
       }
     }
     const titles = [LAYERS[0] + ' Eingänge', '12 Neuronen', '8 Neuronen', 'Steuerung'];
     c.font = '600 12px system-ui, sans-serif'; c.fillStyle = '#b9c4d2'; c.textAlign = 'center';
     titles.forEach((title, i) => c.fillText(title, xPos[i], 16));
-    c.textAlign = 'left'; c.font = '8px system-ui, sans-serif'; c.fillStyle = '#b9c4d2';
-    const sensorNames = ['X-Position', 'Y-Position', 'Tempo X', 'Tempo Y', 'Zielabstand', 'Boden', 'Vorne', 'Oben vorn', 'Oben steil', 'Oben', 'Unten vorn', 'Unten steil', 'Boden vorn', 'Boden mitte', 'Hinten', 'Hinten oben', 'Hinten unten', 'Vorne oben steil', 'Vorne unten steil', 'Boden links', 'Boden rechts', 'Boden voraus', 'Seitlich oben', 'Seitlich unten', 'Ziel X', 'Ziel Y', 'Gefahrabstand', 'Gefahr Y'];
-    for (let i = 0; i < sensorNames.length; i++) c.fillText(sensorNames[i], 4, layerNodes[0][i].y + 3);
-    c.textAlign = 'left'; c.font = '7px system-ui, sans-serif'; c.fillStyle = '#8fb8d8';
-    c.fillText('+' + BLOCK_TYPE_KEYS.length + ' Blocktypen + Distanz', 4, H - 5);
+    c.textAlign = 'left'; c.font = '8px system-ui, sans-serif'; c.fillStyle = '#8fb8d8';
+    c.fillText('Eingänge: Position · Raycasts · Ziel · ' + BLOCK_TYPE_KEYS.length + ' Blocktypen + Distanz', 8, H - 5);
     c.textAlign = 'right'; c.fillStyle = '#e7ebf1';
     c.fillText('Bewegung', W - 6, layerNodes[3][0].y + 3);
     c.fillText('Springen', W - 6, layerNodes[3][1].y + 3);

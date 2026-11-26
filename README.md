@@ -69,7 +69,7 @@ Eine Generation endet, wenn keine Agenten mehr aktiv sind oder das Zeitlimit err
 
 ## KI-Architektur
 
-Das neuronale Netz hat die Schichten **14 → 12 → 8 → 2**.
+Das neuronale Netz hat die Schichten **65 → 12 → 8 → 2**.
 
 Das neuronale Netz nutzt die Architektur **65 → 12 → 8 → 2**. Die Eingaben enthalten sechs Bewegungs-/Positionswerte, 18 Raycast-Werte, vier Ziel-/Gefahrenwerte, einen One-hot-Vektor für alle 36 Blocktypen sowie die Entfernung zum nächsten erkannten Block vor dem Agenten. Die Ausgaben steuern horizontale Bewegung und Springen. Ältere KI-Dateien mit 6, 14 oder 28 Eingaben werden beim Import automatisch auf das neue Format migriert.
 
@@ -77,7 +77,7 @@ Die Fitness berücksichtigt den erreichten Fortschritt zum Ziel, neu erkundete B
 
 ### Kompatibilität älterer KI-Dateien
 
-KI-Dateien aus der vorherigen Architektur `6 → 12 → 8 → 2` können weiterhin importiert werden. Die bisherigen Gewichte bleiben erhalten; die zusätzlichen Raycast-Eingänge werden beim Laden neutral initialisiert.
+KI-Dateien aus den früheren Architekturen `6`, `14` und `28 → 12 → 8 → 2` können weiterhin importiert werden. Vorhandene Gewichte bleiben erhalten; die neuen Blocktyp-Eingänge werden beim Laden neutral initialisiert.
 
 ## Projektstruktur
 

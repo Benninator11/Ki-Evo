@@ -113,7 +113,7 @@ Für die grundlegenden Funktionstests wird Node.js benötigt:
 npm run check
 ```
 
-Die Tests prüfen unter anderem die Netzwerkgröße, semantische Blockerkennung, Sensorwerte und Raycasts, alle Level-Vorlagen, den Import alter Genome, den genetischen Algorithmus und einen Physikschritt.
+Die Tests prüfen unter anderem die Netzwerkgröße, semantische Blockerkennung, Sensorwerte und Raycasts, alle Level-Vorlagen einschließlich einer physikbasierten Erreichbarkeitsprüfung, den Import alter Genome, den genetischen Algorithmus und einen Physikschritt.
 
 ## GitHub Pages
 

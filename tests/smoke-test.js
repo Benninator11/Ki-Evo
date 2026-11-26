@@ -27,7 +27,7 @@ assert.equal(exampleLevels[14].category, 'Extrem');
 assert.equal(new Set(exampleLevels.map((level) => JSON.stringify(Level.preset(level.id).blocks))).size, 15, 'All 15 example layouts must be different.');
 for (const preset of exampleLevels) {
   const course = Level.preset(preset.id);
-  assert.ok(course.blocks.some((b) => b.type === 'ground' || b.type === 'snow' || b.type === 'sand' || b.type === 'moss' || b.type === 'metal' || b.type === 'obsidian' && b.x === 0 && b.y === 560 && b.w === C.W), preset.id + ' needs a safe floor.');
+  assert.ok(course.blocks.some((b) => ['ground','snow','sand','moss','metal','obsidian'].includes(b.type) && b.x === 0 && b.y === 560 && b.w === C.W && b.h === 80), preset.id + ' needs a continuous safe floor.');
   assert.ok(!course.blocks.some((b) => b.type === 'laser'), preset.id + ' must not use a full-height laser barrier.');
   assert.ok(!course.blocks.some((b) => BLOCK_TYPES[b.type].kind === 'full' && b.h > 60 && b.y + b.h >= 560), preset.id + ' must not contain an unjumpable wall.');
   const hazards = course.blocks.filter((b) => BLOCK_TYPES[b.type].kind === 'deadly').sort((a, b) => a.x - b.x);

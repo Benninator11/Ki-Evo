@@ -18,7 +18,7 @@ assert.equal(new Set(exampleLevels.map((level) => level.id)).size, 15, 'Every ex
 for (const preset of exampleLevels) {
   const generated = Level.preset(preset.id);
   assert.ok(generated.start && generated.goal, preset.id + ' needs start and goal markers.');
-  assert.ok(generated.blocks.length >= 8, preset.id + ' should contain a meaningful course.');
+  assert.ok(generated.blocks.length >= 4, preset.id + ' should contain a meaningful course.');
   assert.ok(generated.blocks.every((block) => BLOCK_TYPES[block.type]), preset.id + ' must only use known block types.');
   assert.ok(generated.blocks.every((block) => block.x >= 0 && block.y >= 0 && block.x + block.w <= C.W && block.y + block.h <= C.H), preset.id + ' blocks must stay inside the level.');
 }

@@ -1,6 +1,6 @@
 /* main.js — Anwendungsstart, Evolution, UI und Import/Export */
 import {
-  C, CATEGORIES, BLOCK_TYPES, createAgent, fitness as calcFitness, sense, stepAgent, assistControl,
+  C, CATEGORIES, BLOCK_TYPES, BLOCK_TYPE_KEYS, createAgent, fitness as calcFitness, sense, stepAgent, assistControl,
   render as renderScene, drawBlock, spawnBurst, clearFx, reconcileAgentsAfterLevelEdit,
 } from './engine.js';
 import { LAYERS, genomeSize, forward, upgradeLegacyGenome } from './nn.js';
@@ -263,7 +263,8 @@ import { Level, Editor } from './level.js';
     const layers = Array.isArray(ai.layers) ? ai.layers.join(',') : '';
     if (genome.length === genomeSize() && (!layers || layers === LAYERS.join(','))) {
       // Aktuelles Format.
-    } else if (layers === '14,12,8,2' || layers === '6,12,8,2'
+    } else if (['28,12,8,2', '14,12,8,2', '6,12,8,2'].includes(layers)
+      || genome.length === 28 * 12 + 12 + 12 * 8 + 8 + 8 * 2 + 2
       || genome.length === 14 * 12 + 12 + 12 * 8 + 8 + 8 * 2 + 2
       || genome.length === 6 * 12 + 12 + 12 * 8 + 8 + 8 * 2 + 2) {
       genome = upgradeLegacyGenome(genome);
@@ -381,6 +382,9 @@ import { Level, Editor } from './level.js';
     g.classList.toggle('yes', !!finished || state.goalEver);
     $('infoMut').textContent = Math.round(settings.mut() * 100) + ' %';
     $('infoTime').textContent = (state.tick / 60).toFixed(1) + ' s';
+    const bestAgent = state.bestIndex >= 0 ? ags[state.bestIndex] : null;
+    const detected = bestAgent && bestAgent.detectedBlock;
+    $('infoBlock').textContent = detected ? detected.label : (bestAgent ? 'Freie Bahn' : '–');
   }
 
   function updateUI() {
@@ -442,12 +446,14 @@ import { Level, Editor } from './level.js';
         c.beginPath(); c.arc(node.x, node.y, layer === 0 ? 5.2 : 6.1, 0, Math.PI * 2); c.fill(); c.stroke();
       }
     }
-    const titles = ['28 Sensoren', '12 Neuronen', '8 Neuronen', 'Steuerung'];
+    const titles = [LAYERS[0] + ' Eingänge', '12 Neuronen', '8 Neuronen', 'Steuerung'];
     c.font = '600 12px system-ui, sans-serif'; c.fillStyle = '#b9c4d2'; c.textAlign = 'center';
     titles.forEach((title, i) => c.fillText(title, xPos[i], 16));
     c.textAlign = 'left'; c.font = '8px system-ui, sans-serif'; c.fillStyle = '#b9c4d2';
     const sensorNames = ['X-Position', 'Y-Position', 'Tempo X', 'Tempo Y', 'Zielabstand', 'Boden', 'Vorne', 'Oben vorn', 'Oben steil', 'Oben', 'Unten vorn', 'Unten steil', 'Boden vorn', 'Boden mitte', 'Hinten', 'Hinten oben', 'Hinten unten', 'Vorne oben steil', 'Vorne unten steil', 'Boden links', 'Boden rechts', 'Boden voraus', 'Seitlich oben', 'Seitlich unten', 'Ziel X', 'Ziel Y', 'Gefahrabstand', 'Gefahr Y'];
     for (let i = 0; i < sensorNames.length; i++) c.fillText(sensorNames[i], 4, layerNodes[0][i].y + 3);
+    c.textAlign = 'left'; c.font = '7px system-ui, sans-serif'; c.fillStyle = '#8fb8d8';
+    c.fillText('+' + BLOCK_TYPE_KEYS.length + ' Blocktypen + Distanz', 4, H - 5);
     c.textAlign = 'right'; c.fillStyle = '#e7ebf1';
     c.fillText('Bewegung', W - 6, layerNodes[3][0].y + 3);
     c.fillText('Springen', W - 6, layerNodes[3][1].y + 3);

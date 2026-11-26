@@ -91,10 +91,12 @@ export function upgradeLegacyGenome(oldGenome) {
   let seed = oldGenome.length;
   for (let i = 0; i < oldGenome.length; i += 17) seed = (Math.imul(seed, 31) + Math.round(oldGenome[i] * 10000)) >>> 0;
   const upgraded = randomGenome(makeRng(seed));
-  let oldOffset = 0, newOffset = 0;
-  for (let layer = 0; layer < LAYERS.length - 1; layer++) {
-    const oldIn = oldLayers[layer], oldOut = oldLayers[layer + 1];
-    const newIn = LAYERS[layer], newOut = LAYERS[layer + 1];
+  let oldOffset = 0;
+  for (let oldLayer = 0; oldLayer < oldLayers.length - 1; oldLayer++) {
+    const newLayer = oldLayer === oldLayers.length - 2 ? LAYERS.length - 2 : oldLayer;
+    const oldIn = oldLayers[oldLayer], oldOut = oldLayers[oldLayer + 1];
+    const newIn = LAYERS[newLayer], newOut = LAYERS[newLayer + 1];
+    const newOffset = genomeSizeFor(LAYERS.slice(0, newLayer + 1)) - LAYERS[newLayer + 1];
     const copyIn = Math.min(oldIn, newIn), copyOut = Math.min(oldOut, newOut);
     for (let neuron = 0; neuron < copyOut; neuron++) {
       for (let inputIndex = 0; inputIndex < copyIn; inputIndex++) {
@@ -105,7 +107,6 @@ export function upgradeLegacyGenome(oldGenome) {
         oldGenome[oldOffset + oldIn * oldOut + neuron];
     }
     oldOffset += oldIn * oldOut + oldOut;
-    newOffset += newIn * newOut + newOut;
   }
   return upgraded;
 }

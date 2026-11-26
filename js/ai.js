@@ -2,6 +2,8 @@
    Selektion: Turnier · Crossover: uniform · Mutation: Gauß-Rauschen · Elitismus: bester Agent bleibt unverändert */
 import { makeRng, randomGenome } from './nn.js';
 
+export const MAX_POPULATION = 75;
+
 
   const TOURNAMENT_K = 3;
   const MUT_SIGMA = 0.35;
@@ -15,6 +17,7 @@ import { makeRng, randomGenome } from './nn.js';
     }
 
     initialGenomes(n, seedGenome, mutRate) {
+      n = Math.max(1, Math.min(MAX_POPULATION, Math.floor(Number(n) || 1)));
       const out = [];
       for (let i = 0; i < n; i++) {
         if (seedGenome) out.push(i === 0 ? Float32Array.from(seedGenome) : this.mutate(seedGenome, Math.max(mutRate, 0.1)));
@@ -48,6 +51,7 @@ import { makeRng, randomGenome } from './nn.js';
 
     // Erzeugt die nächste Generation. Gibt { genomes, bestIndex, bestFitness } zurück.
     nextGeneration(genomes, fitness, popSize, mutRate) {
+      popSize = Math.max(1, Math.min(MAX_POPULATION, Math.floor(Number(popSize) || 1)));
       let bi = 0;
       for (let i = 1; i < fitness.length; i++) if (fitness[i] > fitness[bi]) bi = i;
       if (fitness[bi] > this.best.fitness + 0.5) {

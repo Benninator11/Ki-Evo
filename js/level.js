@@ -49,7 +49,7 @@ import { C, BLOCK_TYPES, overlap } from './engine.js';
 
     preset(id) {
       const B = (type, x, y, w, h) => ({ type, x, y, w, h, color: BLOCK_TYPES[type].color, solid: true });
-      const match = /^level-(\\d+)$/.exec(id || '');
+      const match = /^level-(\d+)$/.exec(id || '');
       const n = match ? Math.max(1, Math.min(15, +match[1])) : 1;
       const layouts = {
         1: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1190,"y":480,"w":40,"h":60}, blocks:[["ground",0,560,300,80],["platform",300,500,130,16],["platform",470,450,130,16],["ground",650,500,220,140],["platform",900,450,130,16],["ground",1080,540,200,100]] },
@@ -69,6 +69,7 @@ import { C, BLOCK_TYPES, overlap } from './engine.js';
         15: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1110,"y":100,"w":40,"h":60}, blocks:[["ground",0,560,150,80],["platform",130,500,150,16],["platform",270,440,150,16],["platform",410,380,150,16],["platform",550,320,150,16],["platform",690,260,150,16],["platform",830,200,150,16],["platform",970,140,150,16],["platform",1100,120,150,16],["saw",610,285,40,35],["thorns",880,165,40,35]] },
       };
       const layout = layouts[n];
+      if (!layout) throw new Error('Unbekanntes Beispiel-Level: ' + id);
       return {
         blocks: layout.blocks.map(([type,x,y,w,h]) => B(type,x,y,w,h)),
         start: { ...layout.start },

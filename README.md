@@ -11,7 +11,7 @@ Ki-Evo ist ein browserbasiertes Neuroevolution-Experiment. Du baust eigene Platt
 ## Funktionen
 
 - **Live-Level-Editor:** Plattformen, Wände, Spezialblöcke und Gefahren auch während des Trainings platzieren, auswählen, verschieben, skalieren und löschen – ohne Generations-Neustart.
-- **15 handgebaute Beispiel-Level:** Von einfachen Sprüngen bis zu Laser-Korridoren, Säurekammern und einem komplexen Abschlusslevel – jedes Level hat ein eigenes Layout.
+- **15 handgebaute Beispiel-Level:** Mit unterschiedlichen Streckenformen: Wiesen-Terrassen, Himmelsleiter, Talabstieg, Zickzack-Felsen, Inselkette, Brückenbruch, Sägewerk-Turm, Eisrinne, Förderband-Spirale, Trampolin-Turm, Ruinenbogen, Laser-Galerie, Säurekammern, U-Tal und Evo-Gipfel. Start, Ziel und Höhenverlauf sind für jedes Level eigens gestaltet.
 - **18 Raycast-Sensoren + semantische Blockerkennung:** Die Agenten erfassen Hindernisse, Gefahren und Bodenabdeckung. Zusätzlich erkennt das Netz den konkreten Blocktyp vor dem Agenten – z. B. Steinwand, Eis, Trampolin, Plattform, Lava, Wasser, Säge oder Laser – und erhält dessen Entfernung als eigene Eingaben. Die Sichtstrahlen des aktuell besten Agenten können direkt im Level angezeigt werden.
 - **Neuronales Netz:** Live-Visualisierung der Schichten `65 → 32 → 24 → 12 → 2`. Aktivierte positive Beiträge werden grün, negative rot dargestellt.
 - **Genetischer Algorithmus:** Turnierselektion, uniformes Crossover, Gauß-Mutation und Elitismus.

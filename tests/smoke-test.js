@@ -48,6 +48,12 @@ assert.equal(sensorAgent.rays[0].kind, 'solid', 'The forward ray must detect a w
 assert.equal(sensorAgent.rays[0].blockType, 'wall', 'Raycasts must preserve the exact block type.');
 assert.equal(sensorAgent.detectedBlock.type, 'wall', 'The agent must identify the wall in front of it.');
 assert.equal(sensorInput[28 + BLOCK_TYPE_KEYS.indexOf('wall')], 1, 'The neural network must receive a dedicated wall input.');
+const hazardSenseLevel = { ...sensorLevel, blocks: [{ type: 'lava', x: 95, y: 80, w: 30, h: 90, solid: true }] };
+const hazardSenseAgent = createAgent(hazardSenseLevel);
+const hazardSenseInput = new Float32Array(LAYERS[0]);
+sense(hazardSenseAgent, hazardSenseLevel, hazardSenseInput);
+assert.equal(hazardSenseAgent.detectedBlock.type, 'lava', 'The agent must distinguish lava from an ordinary wall.');
+assert.equal(hazardSenseInput[28 + BLOCK_TYPE_KEYS.indexOf('lava')], 1, 'Lava must activate its own neural input.');
 assert.ok(sensorInput[28 + BLOCK_TYPE_KEYS.length] > 0, 'The neural network must receive the distance to the detected block.');
 assert.ok(sensorAgent.rays[8].x2 < sensorAgent.rays[8].x1, 'The rear ray must point behind the agent.');
 assert.ok(sensorInput[6] > 0 && sensorInput[6] < 1, 'The wall distance must be normalized.');

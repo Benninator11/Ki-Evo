@@ -583,19 +583,9 @@ import { Level, Editor } from './level.js';
       }
     }
 
-    // 50 zusätzliche Beispiel-Level, nach Schwierigkeitsgrad gruppiert.
+    // Beispiel-Level sauber und ohne doppelte Einträge aufbauen.
     const presetSelect = $('levelPreset');
-    const legacyOptions = Array.from(presetSelect.options).map((o) => ({ value: o.value, text: o.textContent }));
     presetSelect.replaceChildren();
-    const legacyGroup = document.createElement('optgroup');
-    legacyGroup.label = 'Klassische Beispiele';
-    legacyOptions.forEach((item) => {
-      const option = document.createElement('option');
-      option.value = item.value;
-      option.textContent = item.text;
-      legacyGroup.appendChild(option);
-    });
-    presetSelect.appendChild(legacyGroup);
     const presetGroups = new Map();
     for (const item of Level.presets()) {
       if (!presetGroups.has(item.category)) {
@@ -609,13 +599,24 @@ import { Level, Editor } from './level.js';
       option.textContent = item.name;
       presetGroups.get(item.category).appendChild(option);
     }
+    presetSelect.value = 'level-1';
 
     // Editor-Buttons
     $('btnPlaceStart').onclick = () => { Editor.arm(Editor.armed && Editor.armed.kind === 'start' ? null : { kind: 'start' }); };
     $('btnPlaceGoal').onclick = () => { Editor.arm(Editor.armed && Editor.armed.kind === 'goal' ? null : { kind: 'goal' }); };
     $('chkGrid').onchange = (e) => { Editor.gridOn = e.target.checked; };
     $('btnDelete').onclick = () => Editor.deleteSelected();
-    $('btnExample').onclick = () => applyLevel(Level.preset($('levelPreset').value));
+    const loadSelectedPreset = () => {
+      try {
+        applyLevel(Level.preset(presetSelect.value));
+        toast('Level geladen: ' + presetSelect.options[presetSelect.selectedIndex].textContent, 1800);
+      } catch (error) {
+        console.error('Beispiel-Level konnte nicht geladen werden:', error);
+        toast('Level konnte nicht geladen werden: ' + error.message, 3500);
+      }
+    };
+    presetSelect.onchange = loadSelectedPreset;
+    $('btnExample').onclick = loadSelectedPreset;
     $('chkSensors').onchange = () => { state.showSensors = $('chkSensors').checked; };
     $('btnClearLevel').onclick = () => {
       if (L().blocks.length || L().start || L().goal) { if (!confirm('Level wirklich leeren?')) return; }

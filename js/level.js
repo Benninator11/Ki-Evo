@@ -55,7 +55,7 @@ import { C, BLOCK_TYPES, overlap } from './engine.js';
         obstacles: [B('ground',0,560,1280,80),B('brick',180,520,40,40),B('brick',220,480,40,80),B('spike',350,540,80,20),B('saw',500,520,40,40),B('wall',650,440,40,120),B('platform',735,465,135,16),B('spike',910,540,80,20),B('convR',1030,540,100,20),B('metal',1150,480,40,80)]
       };
       if (legacy[id]) return { blocks: JSON.parse(JSON.stringify(legacy[id])), start:{x:40,y:520,w:C.START_SIZE.w,h:C.START_SIZE.h}, goal:{x:1200,y:500,w:C.GOAL_SIZE.w,h:C.GOAL_SIZE.h} };
-      const match = /^level-(\\d+)$/.exec(id || '');
+      const match = /^level-(\d+)$/.exec(id || '');
       const n = match ? Math.max(1, Math.min(15, +match[1])) : 1;
       const layouts = {
         1: { start:{"x":40,"y":520,"w":40,"h":40}, goal:{"x":1190,"y":470,"w":40,"h":60}, blocks:[["ground",0,560,220,80],["platform",180,520,135,16],["platform",300,480,135,16],["sand",450,520,150,120],["platform",590,470,150,16],["ground",730,520,180,120],["platform",900,460,140,16],["ground",1060,520,220,120],["spike",370,540,40,20]] },

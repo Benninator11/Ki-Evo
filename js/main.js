@@ -418,20 +418,47 @@ import { Level, Editor } from './level.js';
     if (!cv) return;
     const c = cv.getContext('2d');
     const W = cv.width, H = cv.height;
+    const t = performance.now() / 1000;
     c.clearRect(0, 0, W, H);
-    c.fillStyle = '#202833'; c.fillRect(0, 0, W, H);
+
+    // Deep neural-grid backdrop with a softly lit center.
+    const bg = c.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#111e2c'); bg.addColorStop(.55, '#172b3b'); bg.addColorStop(1, '#101b29');
+    c.fillStyle = bg; c.fillRect(0, 0, W, H);
+    const glow = c.createRadialGradient(W * .52, H * .48, 15, W * .52, H * .48, W * .68);
+    glow.addColorStop(0, 'rgba(42,124,151,.18)'); glow.addColorStop(1, 'rgba(13,25,39,0)');
+    c.fillStyle = glow; c.fillRect(0, 0, W, H);
+    c.strokeStyle = 'rgba(119,177,208,.07)'; c.lineWidth = 1;
+    for (let x = 0; x < W; x += 28) { c.beginPath(); c.moveTo(x + .5, 0); c.lineTo(x + .5, H); c.stroke(); }
+    for (let y = 0; y < H; y += 28) { c.beginPath(); c.moveTo(0, y + .5); c.lineTo(W, y + .5); c.stroke(); }
+
     const trace = state.networkTrace;
     const genome = trace.genome;
     const activations = trace.activations;
     if (!genome || !activations) {
-      c.fillStyle = '#94a0b2'; c.font = '16px system-ui, sans-serif'; c.textAlign = 'center';
-      c.fillText('Starte das Training, um das aktive neuronale Netz zu sehen.', W / 2, H / 2);
+      c.textAlign = 'center';
+      c.fillStyle = '#9bb5c8'; c.font = '600 16px system-ui, sans-serif';
+      c.fillText('Neuronales Netz wartet auf das Training', W / 2, H / 2 - 4);
+      c.fillStyle = '#66859b'; c.font = '12px system-ui, sans-serif';
+      c.fillText('Starte eine Generation, um die Signale live zu verfolgen.', W / 2, H / 2 + 19);
       return;
     }
-    const xPos = LAYERS.map((_, index) => 58 + index * (W - 140) / (LAYERS.length - 1));
+
+    const xPos = LAYERS.map((_, index) => 52 + index * (W - 132) / (LAYERS.length - 1));
     const layerNodes = LAYERS.map((count, layer) => Array.from({ length: count }, (_, i) => ({
-      x: xPos[layer], y: (H - 46) * (i + 0.5) / count + 20,
+      x: xPos[layer], y: (H - 64) * (i + .5) / count + 30,
     })));
+
+    // Subtle glass columns keep the layers readable behind the connections.
+    for (let layer = 0; layer < LAYERS.length; layer++) {
+      const x = xPos[layer] - (layer === 0 ? 13 : 18);
+      c.fillStyle = layer === LAYERS.length - 1 ? 'rgba(255,199,87,.075)' : 'rgba(117,185,214,.055)';
+      c.fillRect(x, 26, layer === 0 ? 26 : 36, H - 52);
+      c.strokeStyle = layer === LAYERS.length - 1 ? 'rgba(255,204,104,.22)' : 'rgba(143,205,229,.14)';
+      c.strokeRect(x + .5, 26.5, (layer === 0 ? 26 : 36) - 1, H - 53);
+    }
+
+    // Connections: positive signal = mint, negative signal = coral.
     let offset = 0;
     for (let layer = 0; layer < LAYERS.length - 1; layer++) {
       const inputCount = LAYERS[layer], outputCount = LAYERS[layer + 1];
@@ -439,37 +466,69 @@ import { Level, Editor } from './level.js';
         for (let i = 0; i < inputCount; i++) {
           const weight = genome[offset + o * inputCount + i];
           const contribution = weight * activations[layer][i];
+          const strength = Math.min(.72, .055 + Math.abs(contribution) * .78);
           const from = layerNodes[layer][i], to = layerNodes[layer + 1][o];
-          const strength = Math.min(0.82, 0.12 + Math.abs(contribution) * 0.62);
-          c.strokeStyle = contribution >= 0 ? `rgba(65,220,135,${strength})` : `rgba(255,93,93,${strength})`;
-          c.lineWidth = Math.min(2.4, 0.45 + Math.abs(weight) * 0.58);
+          c.strokeStyle = contribution >= 0
+            ? 'rgba(78,235,171,' + strength + ')'
+            : 'rgba(255,111,115,' + strength + ')';
+          c.lineWidth = Math.min(2.1, .35 + Math.abs(weight) * .7);
           c.beginPath(); c.moveTo(from.x, from.y); c.lineTo(to.x, to.y); c.stroke();
+
+          // A few travelling signal motes make active connections feel alive.
+          if (Math.abs(contribution) > .34 && ((i * 7 + o * 11 + layer * 13) % 37 === 0)) {
+            const phase = (t * (0.45 + Math.abs(contribution)) + (i + o * 3) * .071) % 1;
+            const px = from.x + (to.x - from.x) * phase;
+            const py = from.y + (to.y - from.y) * phase;
+            c.fillStyle = contribution >= 0 ? 'rgba(151,255,211,.95)' : 'rgba(255,187,170,.95)';
+            c.beginPath(); c.arc(px, py, 1.2 + Math.abs(contribution), 0, Math.PI * 2); c.fill();
+          }
         }
       }
       offset += inputCount * outputCount + outputCount;
     }
+
+    // Nodes get a halo proportional to their current activation.
     for (let layer = 0; layer < LAYERS.length; layer++) {
       for (let i = 0; i < LAYERS[layer]; i++) {
         const node = layerNodes[layer][i];
         const value = activations[layer][i];
-        const alpha = Math.min(1, 0.35 + Math.abs(value) * 0.65);
-        c.fillStyle = value >= 0 ? `rgba(55,210,125,${alpha})` : `rgba(255,90,90,${alpha})`;
-        c.strokeStyle = '#dce5ef'; c.lineWidth = 1;
-        c.beginPath(); c.arc(node.x, node.y, layer === 0 ? 2.5 : 6.1, 0, Math.PI * 2); c.fill(); c.stroke();
+        const intensity = Math.min(1, .18 + Math.abs(value) * .82);
+        const radius = layer === 0 ? 2.35 : layer === LAYERS.length - 1 ? 7 : 5.4;
+        const positive = value >= 0;
+        if (layer > 0 && Math.abs(value) > .16) {
+          const halo = c.createRadialGradient(node.x, node.y, 1, node.x, node.y, radius * 2.8);
+          halo.addColorStop(0, positive ? 'rgba(91,240,176,.35)' : 'rgba(255,113,119,.32)');
+          halo.addColorStop(1, 'rgba(30,60,80,0)');
+          c.fillStyle = halo; c.beginPath(); c.arc(node.x,node.y,radius*2.8,0,Math.PI*2); c.fill();
+        }
+        c.fillStyle = positive
+          ? 'rgba(89,231,166,' + intensity + ')'
+          : 'rgba(255,111,118,' + intensity + ')';
+        c.strokeStyle = layer === LAYERS.length - 1 ? '#fff0c8' : 'rgba(225,245,255,.78)';
+        c.lineWidth = layer === LAYERS.length - 1 ? 1.6 : 1;
+        c.beginPath(); c.arc(node.x, node.y, radius, 0, Math.PI * 2); c.fill(); c.stroke();
+        if (layer === LAYERS.length - 1) {
+          c.fillStyle = 'rgba(255,255,255,.85)';
+          c.beginPath(); c.arc(node.x - 1.7, node.y - 1.7, 1.5, 0, Math.PI * 2); c.fill();
+        }
       }
     }
+
     const titles = LAYERS.map((count, index) => index === 0 ? count + ' Eingänge' : index === LAYERS.length - 1 ? 'Ausgabe' : count + ' Neuronen');
-    c.font = '600 12px system-ui, sans-serif'; c.fillStyle = '#b9c4d2'; c.textAlign = 'center';
-    titles.forEach((title, i) => c.fillText(title, xPos[i], 16));
-    c.textAlign = 'left'; c.font = '8px system-ui, sans-serif'; c.fillStyle = '#8fb8d8';
-    c.fillText('Eingänge: Position · Raycasts · Ziel · ' + BLOCK_TYPE_KEYS.length + ' Blocktypen + Distanz', 8, H - 5);
-    c.textAlign = 'right'; c.fillStyle = '#e7ebf1';
+    c.font = '600 12px system-ui, sans-serif'; c.textAlign = 'center';
+    titles.forEach((title, i) => {
+      c.fillStyle = '#d2e4ef'; c.fillText(title, xPos[i], 17);
+      c.fillStyle = 'rgba(103,184,211,.65)'; c.fillRect(xPos[i] - 13, 21, 26, 2);
+    });
+    c.textAlign = 'left'; c.font = '9px system-ui, sans-serif'; c.fillStyle = '#88a9bd';
+    c.fillText('POSITION  ·  RAYCASTS  ·  ZIEL  ·  ' + BLOCK_TYPE_KEYS.length + ' BLOCKTYPEN  ·  DISTANZ', 9, H - 8);
+    c.textAlign = 'right'; c.font = '600 9px system-ui, sans-serif'; c.fillStyle = '#d9eaf3';
     const outputLayer = layerNodes[LAYERS.length - 1];
-    c.fillText('Bewegung', W - 6, outputLayer[0].y + 3);
-    c.fillText('Springen', W - 6, outputLayer[1].y + 3);
+    c.fillText('MOVE', W - 7, outputLayer[0].y + 3);
+    c.fillText('JUMP', W - 7, outputLayer[1].y + 3);
   }
 
-  function drawChart() {
+    function drawChart() {
     const cv = $('chart'), c = cv.getContext('2d');
     const W = cv.width, H = cv.height;
     c.clearRect(0, 0, W, H);

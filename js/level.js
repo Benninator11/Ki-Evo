@@ -72,7 +72,7 @@ import { C, BLOCK_TYPES, overlap } from './engine.js';
         14: [["obsidian",0,560,1280,80],["wall",130,440,45,120],["saw",230,500,42,42],["laser",330,405,18,155],["platform",390,455,110,16],["acid",530,540,90,30],["wall",660,390,45,170],["spikeDown",730,380,45,20],["saw",820,490,42,42],["laser",930,400,18,160],["platform",990,450,110,16],["fire",1140,500,60,30]],
         15: [["metal",0,560,1280,80],["lava",110,600,140,40],["platform",170,445,100,16],["laser",300,390,18,170],["saw",380,495,42,42],["acid",470,540,100,30],["wall",600,370,50,190],["spikeDown",660,350,50,20],["superBounce",740,540,70,20],["laser",850,380,18,180],["thorns",920,535,80,25],["saw",1030,470,42,42],["fire",1130,500,60,30]],
       };
-      const match = /^level-(\\d+)$/.exec(id || '');
+      const match = /^level-(\d+)$/.exec(id || '');
       const n = match ? Math.max(1, Math.min(15, +match[1])) : 1;
       return {
         blocks: layouts[n].map(([type,x,y,w,h]) => B(type,x,y,w,h)),

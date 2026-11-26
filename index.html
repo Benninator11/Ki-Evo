@@ -80,7 +80,7 @@
         <div class="network-heading">
           <div>
             <h2>Neuronales Netz</h2>
-            <p class="hint">Aktive Verbindungen, Bewegungsdaten und erkannte Blocktypen · Grün = positiver, Rot = negativer Beitrag</p>
+            <p class="hint">3 versteckte Schichten · 3.230 Parameter · erkannte Blocktypen · Grün = positiver, Rot = negativer Beitrag</p>
           </div>
           <label class="check sensor-toggle"><input type="checkbox" id="chkSensors" checked> Raycasts im Level anzeigen</label>
         </div>
@@ -91,7 +91,7 @@
     <aside class="panel" id="controlPanel">
       <h2>Training</h2>
       <section>
-        <label class="slider">Population: <b id="popVal">50</b><input type="range" id="popRange" min="1" max="75" value="50"></label>
+        <label class="slider">KI-Spieler (max. 75): <b id="popVal">50</b><input type="range" id="popRange" min="1" max="75" value="50"></label>
         <label class="slider">Mutation-Rate: <b id="mutVal">10 %</b><input type="range" id="mutRange" min="0" max="100" value="10"></label>
         <label class="slider">Geschwindigkeit: <b id="speedVal">1×</b><input type="range" id="speedRange" min="1" max="50" value="1"></label>
         <label>Max. Zeit pro Generation (s)<input type="number" id="timeInput" min="5" max="120" value="20"></label>

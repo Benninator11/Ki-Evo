@@ -28,83 +28,56 @@ import { C, BLOCK_TYPES, overlap } from './engine.js';
     },
 
     presets() {
-      return Array.from({ length: 50 }, (_, i) => {
-        const n = i + 1;
-        const tier = Math.floor(i / 10);
-        const names = ['Anfänger', 'Fortgeschritten', 'Schwer', 'Experte', 'Extrem'];
-        const themes = ['Wiesenpfad', 'Himmelsinseln', 'Ruinenlauf', 'Eispassage', 'Gefahrenlabor'];
-        return { id: 'level-' + n, name: String(n).padStart(2, '0') + ' · ' + themes[tier] + ' ' + ((i % 10) + 1), category: names[tier] };
-      });
+      return [
+        ['level-1','01 · Erste Schritte','Einfach'],
+        ['level-2','02 · Kleine Stufe','Einfach'],
+        ['level-3','03 · Zwei Sprünge','Einfach'],
+        ['level-4','04 · Der erste Abgrund','Einfach'],
+        ['level-5','05 · Treppenpfad','Einfach'],
+        ['level-6','06 · Schmale Brücken','Fortgeschritten'],
+        ['level-7','07 · Sägewerk','Fortgeschritten'],
+        ['level-8','08 · Eisiger Aufstieg','Fortgeschritten'],
+        ['level-9','09 · Förderband-Chaos','Fortgeschritten'],
+        ['level-10','10 · Trampolinroute','Fortgeschritten'],
+        ['level-11','11 · Ruinen-Labyrinth','Schwer'],
+        ['level-12','12 · Laser-Korridor','Schwer'],
+        ['level-13','13 · Säurekammern','Sehr schwer'],
+        ['level-14','14 · Das Prüfungsfeld','Sehr schwer'],
+        ['level-15','15 · Der Evo-Gipfel','Extrem'],
+      ].map(([id, name, category]) => ({ id, name, category }));
     },
 
     preset(id) {
       const B = (type, x, y, w, h) => ({ type, x, y, w, h, color: BLOCK_TYPES[type].color, solid: true });
       const legacy = {
-        easy: [B('ground', 0, 560, 430, 80), B('ground', 470, 560, 810, 80), B('brick', 230, 520, 40, 40), B('brick', 270, 480, 40, 80), B('spike', 360, 540, 40, 20), B('cloud', 620, 470, 120, 20)],
-        gaps: [B('ground', 0, 560, 260, 80), B('ground', 370, 560, 210, 80), B('ground', 700, 560, 205, 80), B('ground', 1030, 560, 250, 80), B('lava', 260, 610, 110, 30), B('lava', 580, 610, 120, 30), B('lava', 905, 610, 125, 30), B('cloud', 275, 470, 105, 18), B('cloud', 590, 445, 120, 18), B('cloud', 920, 470, 120, 18), B('spike', 175, 540, 40, 20), B('spike', 1080, 540, 40, 20)],
-        obstacles: [B('ground', 0, 560, 1280, 80), B('brick', 180, 520, 40, 40), B('brick', 220, 480, 40, 80), B('spike', 350, 540, 80, 20), B('saw', 500, 520, 40, 40), B('wall', 650, 440, 40, 120), B('platform', 735, 465, 135, 16), B('spike', 910, 540, 80, 20), B('convR', 1030, 540, 100, 20), B('metal', 1150, 480, 40, 80)]
+        easy: [B('ground',0,560,430,80),B('ground',470,560,810,80),B('brick',230,520,40,40),B('brick',270,480,40,80),B('spike',360,540,40,20),B('cloud',620,470,120,20)],
+        gaps: [B('ground',0,560,260,80),B('ground',370,560,210,80),B('ground',700,560,205,80),B('ground',1030,560,250,80),B('lava',260,610,110,30),B('lava',580,610,120,30),B('lava',905,610,125,30),B('cloud',275,470,105,18),B('cloud',590,445,120,18),B('cloud',920,470,120,18),B('spike',175,540,40,20),B('spike',1080,540,40,20)],
+        obstacles: [B('ground',0,560,1280,80),B('brick',180,520,40,40),B('brick',220,480,40,80),B('spike',350,540,80,20),B('saw',500,520,40,40),B('wall',650,440,40,120),B('platform',735,465,135,16),B('spike',910,540,80,20),B('convR',1030,540,100,20),B('metal',1150,480,40,80)]
       };
-      if (legacy[id]) return {
-        blocks: JSON.parse(JSON.stringify(legacy[id])),
-        start: { x: 40, y: 520, w: C.START_SIZE.w, h: C.START_SIZE.h },
-        goal: { x: 1200, y: 500, w: C.GOAL_SIZE.w, h: C.GOAL_SIZE.h }
+      if (legacy[id]) return { blocks: JSON.parse(JSON.stringify(legacy[id])), start:{x:40,y:520,w:C.START_SIZE.w,h:C.START_SIZE.h}, goal:{x:1200,y:500,w:C.GOAL_SIZE.w,h:C.GOAL_SIZE.h} };
+      const layouts = {
+        1: [["ground",0,560,1280,80],["brick",250,520,40,40],["cloud",520,485,130,18],["brick",830,520,40,40]],
+        2: [["ground",0,560,1280,80],["brick",180,520,40,40],["brick",220,480,40,80],["cloud",430,470,120,18],["brick",720,520,80,40],["cloud",980,455,130,18]],
+        3: [["ground",0,560,320,80],["ground",390,560,390,80],["ground",850,560,430,80],["cloud",315,475,100,18],["cloud",700,455,110,18],["spike",570,540,40,20]],
+        4: [["ground",0,560,360,80],["ground",500,560,300,80],["ground",940,560,340,80],["lava",360,610,140,30],["lava",800,610,140,30],["cloud",380,470,110,18],["cloud",810,450,110,18]],
+        5: [["ground",0,560,1280,80],["brick",180,520,80,40],["brick",300,480,80,80],["brick",430,440,80,120],["cloud",570,410,120,18],["brick",760,480,80,80],["brick",900,520,80,40],["spike",1060,540,60,20]],
+        6: [["ground",0,560,190,80],["ground",330,560,170,80],["ground",650,560,180,80],["ground",980,560,300,80],["bridge",190,490,140,16],["bridge",500,455,150,16],["bridge",830,475,150,16],["spike",110,540,40,20],["spike",730,540,40,20]],
+        7: [["ground",0,560,1280,80],["saw",210,510,42,42],["saw",420,470,42,42],["saw",650,510,42,42],["saw",880,465,42,42],["saw",1080,510,42,42],["platform",300,470,100,16],["platform",740,445,100,16]],
+        8: [["snow",0,560,1280,80],["ice",120,520,180,40],["spike",340,540,60,20],["cloud",420,465,130,18],["ice",600,520,160,40],["spike",800,540,60,20],["platform",900,455,130,16],["snow",1080,520,200,40]],
+        9: [["ground",0,560,1280,80],["convR",120,540,180,20],["convL",360,540,180,20],["boostR",600,540,120,20],["convL",780,540,160,20],["boostR",1000,540,140,20],["spike",550,520,40,20],["saw",900,480,40,40]],
+        10: [["ground",0,560,1280,80],["bounce",160,540,70,20],["platform",300,430,120,16],["superBounce",490,540,80,20],["platform",650,380,140,16],["bounce",860,540,70,20],["cloud",990,420,130,18],["spike",1120,540,50,20]],
+        11: [["moss",0,560,1280,80],["wall",170,440,45,120],["platform",230,470,120,16],["brick",390,480,45,80],["spike",500,540,70,20],["wall",620,400,45,160],["bridge",690,435,120,16],["saw",850,500,42,42],["wall",990,430,45,130],["cloud",1050,390,120,18]],
+        12: [["metal",0,560,1280,80],["laser",190,420,20,140],["platform",260,475,120,16],["spike",410,540,60,20],["laser",540,390,20,170],["platform",610,440,120,16],["saw",770,500,42,42],["laser",900,410,20,150],["bridge",970,465,130,16],["spike",1130,540,60,20]],
+        13: [["metal",0,560,1280,80],["acid",150,540,110,30],["platform",270,465,100,16],["thorns",410,535,70,25],["acid",530,540,120,30],["wall",690,420,45,140],["spikeDown",760,390,45,20],["platform",820,450,100,16],["acid",960,540,120,30],["fire",1110,500,60,30]],
+        14: [["obsidian",0,560,1280,80],["wall",130,440,45,120],["saw",230,500,42,42],["laser",330,405,18,155],["platform",390,455,110,16],["acid",530,540,90,30],["wall",660,390,45,170],["spikeDown",730,380,45,20],["saw",820,490,42,42],["laser",930,400,18,160],["platform",990,450,110,16],["fire",1140,500,60,30]],
+        15: [["metal",0,560,1280,80],["lava",110,600,140,40],["platform",170,445,100,16],["laser",300,390,18,170],["saw",380,495,42,42],["acid",470,540,100,30],["wall",600,370,50,190],["spikeDown",660,350,50,20],["superBounce",740,540,70,20],["laser",850,380,18,180],["thorns",920,535,80,25],["saw",1030,470,42,42],["fire",1130,500,60,30]],
       };
-
       const match = /^level-(\\d+)$/.exec(id || '');
-      const n = match ? Math.max(1, Math.min(50, +match[1])) : 1;
-      const tier = Math.floor((n - 1) / 10);
-      const variant = (n - 1) % 10;
-      const blocks = [];
-      const floorY = 560;
-      const add = (type, x, y, w, h) => blocks.push(B(type, x, y, w, h));
-      // Der durchgehende Boden hält die Level lösbar; die Hindernisse und
-      // erhöhten Wege erzeugen pro Vorlage andere Sprung- und Routenmuster.
-      add(['ground','sand','moss','snow','metal'][tier], 0, floorY, 1280, 80);
-      const hazardSets = [
-        ['spike','spike','saw'], ['lava','spike','fire'], ['water','thorns','saw'],
-        ['electric','acid','spikeDown'], ['laser','poison','fire']
-      ];
-      const hazards = hazardSets[tier];
-      const spacing = 105 - tier * 7;
-      for (let j = 0; j < 4 + tier; j++) {
-        const x = 170 + j * spacing + ((variant * 19 + j * 13) % 31);
-        const type = hazards[(j + variant) % hazards.length];
-        const def = BLOCK_TYPES[type];
-        const y = type === 'spikeDown' ? 410 + (j % 2) * 25 : 540;
-        add(type, Math.min(1190 - def.w, x), y, def.w, def.h);
-      }
-      const platforms = ['cloud','platform','steel','bridge'];
-      for (let j = 0; j < 3 + tier; j++) {
-        const x = 260 + j * (150 - tier * 9) + ((variant * 23 + j * 17) % 35);
-        const y = 455 - ((j + variant) % 3) * (24 + tier * 5);
-        add(platforms[(j + variant + tier) % platforms.length], Math.min(1160, x), y, 100 + ((j + variant) % 2) * 40, 16);
-      }
-      const solids = ['brick','wood','wall','metal','crystal','obsidian'];
-      for (let j = 0; j < tier + (variant % 3); j++) {
-        const x = 390 + j * 175 + ((variant * 11) % 25);
-        add(solids[(j + variant + tier) % solids.length], Math.min(1160, x), 480 - (j % 2) * 40, 40, 80);
-      }
-      if (tier >= 1) {
-        add(variant % 2 ? 'convR' : 'convL', 80 + variant * 7, 540, 100, 20);
-        add(variant % 3 ? 'bounce' : 'superBounce', 760 + (variant % 3) * 45, 540, 60, 20);
-      }
-      if (tier >= 2) {
-        add(variant % 2 ? 'ice' : 'mud', 520, 520, 120, 40);
-        add('spikeDown', 880, 390 + (variant % 2) * 25, 40, 20);
-      }
-      if (tier >= 3) {
-        add('boostR', 180, 540, 100, 20);
-        add('laser', 1010, 405 + (variant % 3) * 20, 20, 120);
-      }
-      if (tier >= 4) {
-        add('acid', 600, 540, 80, 30);
-        add('saw', 700, 485, 40, 40);
-        add('fire', 1120, 500, 60, 30);
-      }
+      const n = match ? Math.max(1, Math.min(15, +match[1])) : 1;
       return {
-        blocks,
-        start: { x: 40, y: 520, w: C.START_SIZE.w, h: C.START_SIZE.h },
-        goal: { x: 1200, y: 500, w: C.GOAL_SIZE.w, h: C.GOAL_SIZE.h }
+        blocks: layouts[n].map(([type,x,y,w,h]) => B(type,x,y,w,h)),
+        start: { x:40, y:520, w:C.START_SIZE.w, h:C.START_SIZE.h },
+        goal: { x:1200, y:500, w:C.GOAL_SIZE.w, h:C.GOAL_SIZE.h }
       };
     },
 

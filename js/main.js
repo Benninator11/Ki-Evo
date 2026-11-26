@@ -102,6 +102,15 @@ import { Level, Editor } from './level.js';
     mut: () => +$('mutRange').value / 100,
     speed: () => +$('speedRange').value,
     maxTicks: () => Math.round(Math.max(5, Math.min(120, +$('timeInput').value || 20)) * 60),
+    genetics: () => ({
+      tournamentSize: +$('tournamentRange').value,
+      eliteCount: +$('eliteRange').value,
+      crossoverRate: +$('crossoverRange').value / 100,
+      mutationStrength: +$('strengthRange').value / 100,
+      adaptiveMutation: $('adaptiveMutation').checked,
+      stagnationGenerations: +$('stagnationRange').value,
+      stagnationBoost: +$('boostRange').value / 10,
+    }),
   };
 
   // ---------- Level-Änderungen ----------
@@ -141,7 +150,7 @@ import { Level, Editor } from './level.js';
     unlockDeathAudio();
     if (!levelReady()) { toast('Bitte zuerst Start und Ziel setzen.', 2600); return; }
     state.popSize = settings.pop();
-    state.ga = new GA((Date.now() ^ 0x9e3779b9) >>> 0);
+    state.ga = new GA((Date.now() ^ 0x9e3779b9) >>> 0, settings.genetics());
     state.genomes = state.ga.initialGenomes(state.popSize, state.seedGenome, settings.mut());
     if (state.seedGenome) state.ga.best = { genome: Float32Array.from(state.seedGenome), fitness: -Infinity };
     state.gen = 1;
@@ -195,6 +204,7 @@ import { Level, Editor } from './level.js';
   function endGeneration() {
     const ags = state.agents;
     const fitness = ags.map((a) => calcFitness(a, state.maxTicks));
+    state.ga.configure(settings.genetics());
     const res = state.ga.nextGeneration(state.genomes, fitness, settings.pop(), settings.mut());
     const avg = fitness.reduce((s, v) => s + v, 0) / (fitness.length || 1);
     state.history.push({ best: res.bestFitness, avg });
@@ -281,6 +291,7 @@ import { Level, Editor } from './level.js';
     lsSet(KEY_AI, aiToJSON());
     if (state.mode !== 'edit' && state.ga) {
       // laufendes Training mit der geladenen KI neu aufsetzen
+      state.ga.configure(settings.genetics());
       state.genomes = state.ga.initialGenomes(settings.pop(), p.genome, settings.mut());
       state.ga.best = { genome: Float32Array.from(p.genome), fitness: -Infinity };
       spawn();
@@ -631,6 +642,17 @@ import { Level, Editor } from './level.js';
     $('popRange').oninput = () => { $('popVal').textContent = $('popRange').value; };
     $('mutRange').oninput = () => { $('mutVal').textContent = $('mutRange').value + ' %'; updateInfo(); };
     $('speedRange').oninput = () => { $('speedVal').textContent = $('speedRange').value + '×'; };
+    const refreshGeneticLabels = () => {
+      $('tournamentVal').textContent = $('tournamentRange').value;
+      $('eliteVal').textContent = $('eliteRange').value;
+      $('crossoverVal').textContent = $('crossoverRange').value + ' %';
+      $('strengthVal').textContent = $('strengthRange').value + ' %';
+      $('stagnationVal').textContent = $('stagnationRange').value;
+      $('boostVal').textContent = (+$('boostRange').value / 10).toFixed(1).replace('.', ',') + '×';
+      if (state.ga) state.ga.configure(settings.genetics());
+    };
+    for (const id of ['tournamentRange', 'eliteRange', 'crossoverRange', 'strengthRange', 'stagnationRange', 'boostRange']) $(id).oninput = refreshGeneticLabels;
+    $('adaptiveMutation').onchange = refreshGeneticLabels;
 
     // Speichern / Laden
     $('btnSaveLevel').onclick = saveLevelFile;

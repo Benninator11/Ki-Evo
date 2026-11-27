@@ -90,6 +90,19 @@ assert.equal(BLOCK_TYPES.superBounce.kind, 'bounce');
 assert.equal(BLOCK_TYPES.boostR.kind, 'conveyor');
 assert.equal(BLOCK_TYPES.fire.kind, 'deadly');
 assert.equal(BLOCK_TYPES.laser.kind, 'deadly');
+// Rückwärtsbewegung: ein deutlicher gegenteiliger Netzwerkausgang darf
+// nicht durch den Zielrichtungs-Assistenten auf Vorwärtslaufen gezwungen werden.
+const reverseAgent = createAgent(easy);
+reverseAgent.onGround = true;
+const reverseInput = new Float32Array(LAYERS[0]);
+reverseInput[24] = 1; // Ziel liegt rechts.
+const reverseControl = assistControl(reverseAgent, reverseInput, [-0.9, 0.1], easy);
+assert.ok(reverseControl.move < -0.8, 'The neural policy must be able to walk backwards from a goal to the right.');
+const reverseLeftInput = new Float32Array(LAYERS[0]);
+reverseLeftInput[24] = -1; // Ziel liegt links.
+const reverseLeftControl = assistControl(reverseAgent, reverseLeftInput, [0.9, 0.1], easy);
+assert.ok(reverseLeftControl.move > 0.8, 'The neural policy must also be able to walk backwards from a goal to the left.');
+
 const agent = createAgent(easy);
 const input = new Float32Array(LAYERS[0]);
 sense(agent, easy, input);

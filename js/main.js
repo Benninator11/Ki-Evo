@@ -31,6 +31,9 @@ import { Level, Editor } from './level.js';
     seedInfo: null,
     popSize: 50,
     networkTrace: { activations: null, genome: null },
+    levelMix: false,
+    originalLevel: null,
+    lastMixKey: '',
   };
 
   const canvas = $('game');
@@ -148,6 +151,10 @@ import { Level, Editor } from './level.js';
 
   function startTraining() {
     unlockDeathAudio();
+    state.levelMix = $('levelMix').checked;
+    state.originalLevel = Level.toJSON(L());
+    state.lastMixKey = '';
+    if (state.levelMix) setNextMixLevel();
     if (!levelReady()) { toast('Bitte zuerst Start und Ziel setzen.', 2600); return; }
     state.popSize = settings.pop();
     state.ga = new GA((Date.now() ^ 0x9e3779b9) >>> 0, settings.genetics());
@@ -201,6 +208,28 @@ import { Level, Editor } from './level.js';
     if (active === 0 || state.tick >= state.maxTicks) endGeneration();
   }
 
+  function setNextMixLevel() {
+    const presets = Level.presets();
+    if (!presets.length) return;
+    let preset, mirrored, key;
+    for (let attempt = 0; attempt < 30; attempt++) {
+      preset = presets[Math.floor(Math.random() * presets.length)];
+      mirrored = Math.random() < 0.5;
+      key = preset.id + (mirrored ? ':mirror' : ':normal');
+      if (key !== state.lastMixKey) break;
+    }
+    state.lastMixKey = key;
+    const level = Level.preset(preset.id);
+    if (mirrored) {
+      const mirror = (item) => ({ ...item, x: C.W - item.x - item.w });
+      level.blocks = level.blocks.map(mirror);
+      level.start = mirror(level.start);
+      level.goal = mirror(level.goal);
+    }
+    Editor.setLevel(level);
+    state._mixLabel = preset.name + (mirrored ? ' · gespiegelt' : '');
+  }
+
   function endGeneration() {
     const ags = state.agents;
     const fitness = ags.map((a) => calcFitness(a, state.maxTicks));
@@ -227,6 +256,7 @@ import { Level, Editor } from './level.js';
 
     state.genomes = res.genomes;
     state.gen++;
+    if (state.levelMix) setNextMixLevel();
     spawn();
   }
 
@@ -239,6 +269,11 @@ import { Level, Editor } from './level.js';
   function resetAll() {
     if ((state.mode !== 'edit' || state.seedGenome) && !confirm('Training zurücksetzen? Die gespeicherte KI im Browser wird dabei gelöscht.')) return;
     state.mode = 'edit';
+    if (state.originalLevel) Editor.setLevel(Level.sanitize(state.originalLevel));
+    state.originalLevel = null;
+    state.levelMix = false;
+    state.lastMixKey = '';
+    $('levelMix').checked = false;
     state.ga = null;
     state.gen = 0;
     state.genomes = [];
@@ -410,6 +445,8 @@ import { Level, Editor } from './level.js';
     for (const id of ['btnExample', 'btnClearLevel']) $(id).disabled = false;
     document.querySelectorAll('.tile').forEach((t) => { t.draggable = true; t.classList.remove('disabled'); });
     $('editorPanel').title = live ? 'Live-Editor: Änderungen gelten sofort für diese Generation' : '';
+    const mixStatus = $('levelMixStatus');
+    if (mixStatus) mixStatus.textContent = state.levelMix ? 'Aktiv · ' + (state._mixLabel || 'wechselnde Level') : 'Aus';
     updateInfo();
   }
 

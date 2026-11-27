@@ -637,30 +637,24 @@
   };
 
     ST.stone = (ctx, w, h, base) => {
-    ctx.fillStyle = shade(base, -0.5);
-    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = shade(base, -.55); ctx.fillRect(0, 0, w, h);
     tiles(w, h, 40, (x, y, tw, th, i, j) => {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.fillStyle = shade(base, hash(i, j) * 0.14 - 0.07);
-      ctx.fillRect(1, 1, tw - 2, th - 2);
-      bevel(ctx, tw, th, 'rgba(255,255,255,.28)', 'rgba(0,0,0,.3)', 3);
-      for (let k = 0; k < 6; k++) {
-        ctx.fillStyle = hash(i * 7 + k, j) > 0.5 ? 'rgba(0,0,0,.14)' : 'rgba(255,255,255,.16)';
-        ctx.fillRect(4 + hash(k, i + j * 3) * (tw - 10), 4 + hash(j, k + i * 5) * (th - 10), 2, 2);
-      }
-      if (hash(i, j + 9) > 0.7 && tw >= 30 && th >= 30) {
-        ctx.strokeStyle = 'rgba(0,0,0,.3)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(10, 8); ctx.lineTo(16, 18); ctx.lineTo(13, 26); ctx.lineTo(20, 33);
-        ctx.stroke();
-      }
+      ctx.save(); ctx.translate(x, y);
+      const v = hash(i, j);
+      rr(ctx, 1.5, 1.5, tw - 3, th - 3, 3);
+      ctx.fillStyle = grad(ctx, 0, 0, shade(base, .18 + v * .08), shade(base, -.22 - v * .08)); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.22)'; ctx.lineWidth = 1; ctx.stroke();
+      // Faceted rock planes and layered mineral grain.
+      ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.beginPath(); ctx.moveTo(3,3); ctx.lineTo(tw*.55,3); ctx.lineTo(tw*.34,th*.48); ctx.lineTo(3,th*.68); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,.13)'; ctx.beginPath(); ctx.moveTo(tw-3,3); ctx.lineTo(tw-3,th-3); ctx.lineTo(tw*.48,th-3); ctx.lineTo(tw*.68,th*.54); ctx.closePath(); ctx.fill();
+      for(let k=0;k<13;k++){const px=4+hash(i*13+k,j)*Math.max(1,tw-8),py=4+hash(j*17+k,i)*Math.max(1,th-8);ctx.fillStyle=k%2?'rgba(255,255,255,.2)':'rgba(0,0,0,.18)';ctx.beginPath();ctx.arc(px,py,.5+hash(k,i)*1.2,0,Math.PI*2);ctx.fill();}
+      if(v>.55){ctx.strokeStyle='rgba(25,20,22,.38)';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(tw*.28,3);ctx.lineTo(tw*.42,th*.36);ctx.lineTo(tw*.34,th*.58);ctx.lineTo(tw*.62,th-3);ctx.stroke();}
       ctx.restore();
     });
+    bevel(ctx,w,h,'rgba(255,255,255,.35)','rgba(0,0,0,.42)',3);
   };
 
-  ST.brick = (ctx, w, h, base) => {
+    ST.brick = (ctx, w, h, base) => {
     ctx.fillStyle = shade(base, -0.5);
     ctx.fillRect(0, 0, w, h);
     for (let row = 0; row * 20 < h; row++) {
@@ -678,27 +672,21 @@
   };
 
   ST.wood = (ctx, w, h, base) => {
-    for (let x = 0, i = 0; x < w; x += 10, i++) {
-      ctx.fillStyle = shade(base, (i % 2 ? -0.08 : 0.06) + hash(i, 1) * 0.06);
-      ctx.fillRect(x, 0, Math.min(10, w - x), h);
-      ctx.fillStyle = 'rgba(0,0,0,.18)';
-      ctx.fillRect(x, 0, 1, h);
-      ctx.strokeStyle = 'rgba(60,30,10,.25)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(x + 4, 3); ctx.bezierCurveTo(x + 7, h * 0.3, x + 2, h * 0.6, x + 5, h - 3);
-      ctx.stroke();
+    const plank = 20;
+    for(let x=0,i=0;x<w;x+=plank,i++){
+      ctx.fillStyle=grad(ctx,0,h,shade(base,.16+hash(i,1)*.06),shade(base,-.22-hash(i,2)*.05));
+      ctx.fillRect(x+1,0,Math.min(plank-2,w-x-1),h);
+      ctx.strokeStyle='rgba(255,224,167,.22)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x+2,2);ctx.lineTo(x+2,h-2);ctx.stroke();
+      ctx.strokeStyle='rgba(45,22,9,.3)';
+      for(let k=0;k<3;k++){const yy=5+hash(i,k+5)*Math.max(1,h-10);ctx.beginPath();ctx.moveTo(x+5,yy);ctx.bezierCurveTo(x+10,yy-3,x+13,yy+3,x+plank-5,yy);ctx.stroke();}
+      if(h>18){ctx.strokeStyle='rgba(70,35,15,.5)';ctx.beginPath();ctx.ellipse(x+plank/2,h*.5,3,1.7,0,0,Math.PI*2);ctx.stroke();}
     }
-    bevel(ctx, w, h, 'rgba(255,255,255,.25)', 'rgba(0,0,0,.3)', 3);
-    ctx.fillStyle = '#3b2a1c';
-    tiles(w, h, 40, (x, y, tw, th) => {
-      for (const [nx, ny] of [[5, 5], [tw - 5, 5], [5, th - 5], [tw - 5, th - 5]]) {
-        ctx.beginPath(); ctx.arc(x + nx, y + ny, 1.6, 0, 7); ctx.fill();
-      }
-    });
+    // Metal nails at each plank end.
+    for(let x=8;x<w;x+=plank){for(const y of [5,h-5]){ctx.fillStyle='#60452f';ctx.beginPath();ctx.arc(x,y,2,0,Math.PI*2);ctx.fill();ctx.fillStyle='rgba(255,225,177,.8)';ctx.fillRect(x-1,y-1,.9,.9);}}
+    bevel(ctx,w,h,'rgba(255,231,184,.38)','rgba(0,0,0,.4)',3);
   };
 
-  ST.sand = (ctx, w, h, base) => {
+    ST.sand = (ctx, w, h, base) => {
     ctx.fillStyle = grad(ctx, 0, h, shade(base, 0.18), shade(base, -0.28));
     ctx.fillRect(0, 0, w, h);
     ctx.fillStyle = 'rgba(255,247,209,.42)';
@@ -825,24 +813,24 @@
   };
 
   ST.crystal = (ctx, w, h, base) => {
-    ctx.fillStyle = grad(ctx, 0, h, shade(base, 0.3), shade(base, -0.35));
-    ctx.fillRect(0, 0, w, h);
-    tiles(w, h, 40, (x, y, tw, th, i, j) => {
-      const cx = x + tw / 2, cy = y + th / 2;
-      const pts = [[x, y], [x + tw, y], [x + tw, y + th], [x, y + th]];
-      for (let k = 0; k < 4; k++) {
-        const a = pts[k], b = pts[(k + 1) % 4];
-        ctx.fillStyle = ['rgba(255,255,255,.35)', 'rgba(255,255,255,.08)', 'rgba(0,0,40,.25)', 'rgba(255,255,255,.18)'][k];
-        ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(cx, cy); ctx.fill();
-      }
-      ctx.strokeStyle = 'rgba(255,255,255,.55)';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(x + 6, y + 6, tw - 12, th - 12);
+    ctx.fillStyle=grad(ctx,0,h,shade(base,.32),shade(base,-.4));ctx.fillRect(0,0,w,h);
+    tiles(w,h,40,(x,y,tw,th,i,j)=>{
+      const cx=x+tw/2,cy=y+th/2;
+      // Large cut facets, inner prism and sharp glints.
+      const facets=[
+        [[x+2,y+2],[cx,y+3],[cx-3,cy],[x+3,y+th-3]],
+        [[cx,y+3],[x+tw-2,y+2],[x+tw-3,y+th-3],[cx+2,cy]],
+        [[x+3,y+th-3],[cx-3,cy],[cx+2,cy],[x+tw-3,y+th-3]]
+      ];
+      facets.forEach((p,k)=>{ctx.fillStyle=['rgba(255,255,255,.34)','rgba(255,255,255,.12)','rgba(5,15,65,.24)'][k];ctx.beginPath();ctx.moveTo(...p[0]);p.slice(1).forEach(q=>ctx.lineTo(...q));ctx.closePath();ctx.fill();});
+      ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(x+4,y+4);ctx.lineTo(cx,y+5);ctx.lineTo(x+tw-5,y+4);ctx.stroke();
+      ctx.strokeStyle='rgba(255,255,255,.3)';ctx.beginPath();ctx.moveTo(cx, y+6);ctx.lineTo(cx+2,th-5);ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,.75)';ctx.beginPath();ctx.arc(x+tw*.28,y+th*.25,1.4,0,Math.PI*2);ctx.fill();
     });
-    bevel(ctx, w, h, 'rgba(255,255,255,.6)', 'rgba(0,0,60,.4)', 3);
+    bevel(ctx,w,h,'rgba(255,255,255,.72)','rgba(0,0,60,.48)',3);
   };
 
-  ST.obsidian = (ctx, w, h, base) => {
+    ST.obsidian = (ctx, w, h, base) => {
     ctx.fillStyle = grad(ctx, 0, h, shade(base, -0.2), shade(base, -0.75));
     ctx.fillRect(0, 0, w, h);
     ctx.save(); clipRect(ctx, w, h);

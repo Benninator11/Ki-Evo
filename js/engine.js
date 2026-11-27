@@ -352,6 +352,27 @@
       out[28 + BLOCK_TYPE_KEYS.length] = 0;
       a.detectedBlock = null;
     }
+    // Erweiterte räumliche Orientierung: nächstes Hindernis relativ zur
+    // Blickrichtung, nächstes Gefahrenfeld und Art des aktuellen Untergrunds.
+    let nearestSolid = null, solidDistance = DIAG;
+    const direction = a.facing || (out[24] >= 0 ? 1 : -1);
+    for (const block of level.blocks) {
+      if (block.solid === false || !SOLID_KINDS[kindOf(block)]) continue;
+      const bx = block.x + block.w / 2, by = block.y + block.h / 2;
+      const dx = (bx - ax) * direction;
+      if (dx < -a.w || dx > 360 || Math.abs(by - ay) > 230) continue;
+      const d = Math.hypot(dx, by - ay);
+      if (d < solidDistance) { solidDistance = d; nearestSolid = { dx, dy: by - ay, w: block.w, h: block.h }; }
+    }
+    out[65] = nearestSolid ? Math.max(-1, Math.min(1, nearestSolid.dx / 360)) : 1;
+    out[66] = nearestSolid ? Math.max(-1, Math.min(1, nearestSolid.dy / 230)) : 0;
+    out[67] = nearestSolid ? Math.max(0, Math.min(1, nearestSolid.w / 240)) : 0;
+    out[68] = nearestSolid ? Math.max(0, Math.min(1, nearestSolid.h / 240)) : 0;
+    out[69] = nearestHazard ? Math.max(-1, Math.min(1, (nearestHazard.x - ax) / C.W)) : 0;
+    out[70] = nearestHazard ? Math.max(0, Math.min(1, nearestDistance / DIAG)) : 1;
+    const surfaceKind = a.surface ? kindOf(a.surface) : null;
+    const surfaceKinds = ['full', 'ice', 'mud', 'bounce', 'conveyor', 'oneway'];
+    for (let i = 0; i < surfaceKinds.length; i++) out[71 + i] = surfaceKind === surfaceKinds[i] ? 1 : 0;
     a.sensorValues = out;
     return out;
   };
@@ -1596,6 +1617,27 @@
     }
     ctx.drawImage(bgCanvas, 0, 0, C.W, C.H);
     for (const [x, y, s, sp] of CLOUDS) drawCloud(ctx, ((x + t * sp) % (C.W + 240)) - 120, y, s);
+    // Parallax-Hügel, atmosphärische Tiefe und schwebende Lichtpunkte.
+    ctx.save(); ctx.globalAlpha = .22; ctx.fillStyle = '#244b68';
+    ctx.beginPath(); ctx.moveTo(0,390);
+    for(let x=0;x<=C.W;x+=40) ctx.lineTo(x,350+Math.sin(x*.009+t*.08)*20+Math.sin(x*.021)*12);
+    ctx.lineTo(C.W,C.H);ctx.lineTo(0,C.H);ctx.closePath();ctx.fill();
+    ctx.globalAlpha = .12; ctx.fillStyle = '#173a55';
+    ctx.beginPath();ctx.moveTo(0,440);
+    for(let x=0;x<=C.W;x+=32)ctx.lineTo(x,410+Math.sin(x*.012+t*.12+1)*17+Math.sin(x*.027)*8);
+    ctx.lineTo(C.W,C.H);ctx.lineTo(0,C.H);ctx.closePath();ctx.fill();ctx.restore();
+    for(let i=0;i<34;i++){
+      const x=(hash(i,17)*C.W+t*(5+hash(i,18)*10))%(C.W+12)-6;
+      const y=220+hash(i,19)*390+Math.sin(t*1.1+i)*5;
+      ctx.globalAlpha=.18+hash(i,21)*.28; ctx.fillStyle=i%5===0?'#ffe6a1':'#e6f7ff';
+      ctx.beginPath();ctx.arc(x,y,.7+hash(i,20)*1.4,0,Math.PI*2);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    for(let i=0;i<3;i++){
+      const x=(C.W+((t*18+i*390)%(C.W+120)))-60, y=105+i*37+Math.sin(t*1.5+i)*8;
+      ctx.strokeStyle='rgba(48,76,94,.42)';ctx.lineWidth=1.4;
+      ctx.beginPath();ctx.moveTo(x-6,y);ctx.quadraticCurveTo(x-2,y-5,x,y);ctx.quadraticCurveTo(x+3,y-5,x+7,y);ctx.stroke();
+    }
   }
 
   // ---- Start / Ziel ----
@@ -1655,8 +1697,11 @@
     ctx.save();
     const cx = a.x + a.w / 2, cy = a.y + a.h / 2;
     const moving = a.onGround && Math.abs(a.vx) > .3;
-    const swing = moving ? Math.sin(tick * .42 + a.x * .035) * 2.2 : 0;
+    const runPhase = tick * .34 + a.x * .035;
+    const swing = moving ? Math.sin(runPhase) * 3.1 : 0;
     const airborne = !a.onGround;
+    const jumpPose = airborne ? (a.vy < 0 ? -1 : 1) : 0;
+    const bob = moving ? Math.abs(Math.sin(runPhase)) * 1.35 : (!airborne ? Math.sin(t * 2.2 + a.x*.04) * .35 : 0);
     const pulse = .5 + .5 * Math.sin(t * 7 + a.x * .08);
     // A soft personal light makes the lead bot easy to follow.
     if (isBest) {
@@ -1672,7 +1717,9 @@
       ctx.fillStyle = 'rgba(0,0,0,.26)';
       ctx.beginPath(); ctx.ellipse(cx, a.y + a.h + 1, 8, 2.5, 0, 0, Math.PI * 2); ctx.fill();
     }
-    ctx.translate(cx, a.y);
+    // Körper federt beim Laufen und neigt sich in Sprung-/Fallrichtung.
+    ctx.translate(cx, a.y + bob);
+    ctx.rotate(airborne ? Math.max(-.12, Math.min(.12, a.vx * .025 + a.vy * .006)) : (moving ? Math.sign(a.vx) * .035 : 0));
     ctx.scale(a.facing || 1, 1);
     // Small antenna and its light.
     ctx.strokeStyle = '#263b50'; ctx.lineWidth = 1.5;
@@ -1691,8 +1738,8 @@
       ctx.fillStyle = '#e9f4fa'; rr(ctx, x - 2.8, 23 - lift, 5.5, 2.8, 1.2); ctx.fill();
       ctx.fillStyle = '#33475a'; ctx.fillRect(x - 1.8, 25 - lift, 4, 1);
     };
-    leg(6, airborne ? (a.vy < 0 ? 1.5 : 0) : Math.max(0, swing));
-    leg(12, airborne ? (a.vy < 0 ? 0 : 1.5) : Math.max(0, -swing));
+    leg(6, airborne ? (jumpPose < 0 ? 2.8 : 0.2) : Math.max(0, swing));
+    leg(12, airborne ? (jumpPose < 0 ? 0.2 : 2.8) : Math.max(0, -swing));
     // Compact armored body with colored core.
     ctx.fillStyle = shade(color, -.38); rr(ctx, 2, 12, 14, 11, 3); ctx.fill();
     ctx.fillStyle = grad(ctx, 3, 22, shade(color, .28), shade(color, -.18));

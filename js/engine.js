@@ -378,9 +378,15 @@
   // geht erst ein Stück zurück und sucht damit einen Abstieg bzw. Umweg.
   export function assistControl(agent, input, neuralOut, level) {
     const goalDirection = input[24] >= 0 ? 1 : -1;
-    let move = neuralOut[0] * 0.62 + goalDirection * 0.38;
-    if (goalDirection > 0 && move < 0.16) move = 0.16;
-    if (goalDirection < 0 && move > -0.16) move = -0.16;
+    const neuralMove = Math.max(-1, Math.min(1, Number(neuralOut[0]) || 0));
+
+    // Ein klar entgegengesetzter Netzwerkausgang ist eine bewusste Rückwärts-
+    // Entscheidung. Diese darf die Zielhilfe nicht mehr wegklemmen.
+    // Bei neutraler/unsicherer Ausgabe bleibt eine leichte Zielhilfe aktiv.
+    const wantsReverse = neuralMove * goalDirection < -0.28;
+    let move = wantsReverse
+      ? neuralMove
+      : neuralMove * 0.68 + goalDirection * 0.32;
     move = Math.max(-1, Math.min(1, move));
     const nav = agent.navigation || (agent.navigation = { blockedTicks: 0, detourTicks: 0, detourStartX: agent.x, detourDirection: 0 });
     const wall = blockingWallAhead(agent, level, goalDirection);
@@ -517,9 +523,14 @@
 
     // Zustand (für Anzeige)
     if (!a.onGround) a.state = a.vy < 0 ? 'springt' : 'Luft';
-    else if (a.vx > 0.3) a.state = 'vorwärts';
-    else if (a.vx < -0.3) a.state = 'rückwärts';
-    else a.state = 'steht';
+    else {
+      const toGoal = level.goal.x + level.goal.w / 2 - (a.x + a.w / 2);
+      const goalDirection = toGoal >= 0 ? 1 : -1;
+      const progressVelocity = a.vx * goalDirection;
+      if (progressVelocity > 0.3) a.state = 'vorwärts';
+      else if (progressVelocity < -0.3) a.state = 'rückwärts';
+      else a.state = 'steht';
+    }
 
     a.ticks++;
 

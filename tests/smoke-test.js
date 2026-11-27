@@ -73,7 +73,7 @@ for (const preset of exampleLevels) {
   assert.ok(course.blocks.every((block) => BLOCK_TYPES[block.type]), preset.id + ' must only use known block types.');
   assert.ok(course.blocks.every((block) => block.x >= 0 && block.y >= 0 && block.x + block.w <= C.W && block.y + block.h <= C.H), preset.id + ' blocks must stay inside the level.');
   assert.ok(course.start.x !== course.goal.x || course.start.y !== course.goal.y, preset.id + ' needs a real route.');
-  assert.ok(hasReachablePresetRoute(course), preset.id + ' must have a route whose jumps fit the game's physics.');
+  assert.ok(hasReachablePresetRoute(course), preset.id + " must have a route whose jumps fit the game's physics.");
   routeSignatures.add(JSON.stringify({
     start: course.start, goal: course.goal,
     blocks: course.blocks.map(({type,x,y,w,h}) => [type,x,y,w,h])

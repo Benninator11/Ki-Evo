@@ -45,8 +45,9 @@ export function randomGenome(rng) {
   return genome;
 }
 
-const bufA = new Float32Array(32);
-const bufB = new Float32Array(32);
+// Buffergröße muss mindestens der größten versteckten Schicht entsprechen.
+const bufA = new Float32Array(40);
+const bufB = new Float32Array(40);
 
 export function forward(genome, input, out, trace) {
   let src = input;

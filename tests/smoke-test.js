@@ -7,7 +7,7 @@ import { Level } from '../js/level.js';
 assert.deepEqual(LAYERS, [77, 40, 28, 14, 2]);
 assert.equal(genomeSize(), 4704, 'The expanded network should expose 4,704 trainable parameters.');
 assert.equal(BLOCK_TYPE_KEYS.length, 36);
-assert.equal(genomeSize(), 65 * 32 + 32 + 32 * 24 + 24 + 24 * 12 + 12 + 12 * 2 + 2);
+assert.equal(genomeSize(), 77 * 40 + 40 + 40 * 28 + 28 + 28 * 14 + 14 + 14 * 2 + 2);
 const easy = Level.preset('easy');
 assert.ok(easy.start && easy.goal && easy.blocks.length >= 4);
 assert.ok(Level.preset('gaps').blocks.some((b) => b.type === 'lava'));

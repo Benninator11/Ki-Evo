@@ -1122,12 +1122,29 @@
     ctx.fillStyle = '#d7dde6'; ctx.beginPath(); ctx.arc(-1, -1, r * 0.08, 0, 7); ctx.fill();
   };
   ST.fire = (ctx, w, h, base, t) => {
-    ctx.fillStyle = 'rgba(255,70,15,.22)'; ctx.fillRect(0, 0, w, h);
-    for (let x = 0; x < w; x += 12) {
-      const flame = h * (0.45 + 0.4 * hash(x, 2));
-      ctx.fillStyle = '#ff4b19';
-      ctx.beginPath(); ctx.moveTo(x, h); ctx.quadraticCurveTo(x + 5, h - flame - Math.sin(t * 8 + x) * 4, x + 10, h); ctx.fill();
-      ctx.fillStyle = '#ffd34d'; ctx.beginPath(); ctx.moveTo(x + 3, h); ctx.quadraticCurveTo(x + 5, h - flame * .55, x + 7, h); ctx.fill();
+    const glow = ctx.createRadialGradient(w*.5,h*.78,1,w*.5,h*.78,Math.max(w,h)*.95);
+    glow.addColorStop(0,'rgba(255,177,37,.52)');
+    glow.addColorStop(.48,'rgba(255,72,14,.22)');
+    glow.addColorStop(1,'rgba(255,35,0,0)');
+    ctx.fillStyle = glow; ctx.fillRect(-w*.18,-h*.25,w*1.36,h*1.3);
+    for (let i = 0; i < Math.max(3, Math.ceil(w/10)); i++) {
+      const x = (i + .5) * w / Math.max(3, Math.ceil(w/10));
+      const flicker = Math.sin(t*10 + i*2.1) * 2.4 + Math.sin(t*6.3+i)*1.6;
+      const height = h * (.46 + hash(i, 2) * .43) + flicker;
+      ctx.fillStyle = i%2 ? '#ff4a13' : '#ff7418';
+      ctx.beginPath();
+      ctx.moveTo(x-w*.11,h);
+      ctx.bezierCurveTo(x-w*.2,h-height*.25,x-w*.02,h-height*.78+flicker,x+Math.sin(t*8+i)*2,h-height);
+      ctx.bezierCurveTo(x+w*.14,h-height*.65,x+w*.2,h-height*.24,x+w*.11,h);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#ffd34c';
+      ctx.beginPath();
+      ctx.moveTo(x-w*.055,h);
+      ctx.quadraticCurveTo(x-w*.07,h-height*.35,x+Math.sin(t*9+i)*1.5,h-height*.62);
+      ctx.quadraticCurveTo(x+w*.08,h-height*.34,x+w*.055,h);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,220,.72)';
+      ctx.beginPath(); ctx.ellipse(x+Math.sin(t*7+i)*1.2,h-2,1.3,1.8,0,0,Math.PI*2); ctx.fill();
     }
   };
   ST.electric = (ctx, w, h) => {
@@ -1146,6 +1163,195 @@
     ctx.fillStyle = '#fff2f6'; ctx.fillRect(w / 2 - 1, 0, 2, h);
   };
 
+
+  // ---- Hochwertige Material-Details für sämtliche Blocktypen ----
+  // Diese Ebene ergänzt die vorhandenen Grundtexturen, ohne die Geometrie
+  // oder die Kollisionsdaten der Blöcke zu verändern.
+  function drawMaterialDetails(ctx, w, h, style, base, t) {
+    ctx.save();
+    clipRect(ctx, w, h);
+    const speckle = (count, light, dark, size) => {
+      for (let i = 0; i < count; i++) {
+        const x = hash(i + style.length * 7, 31) * w;
+        const y = hash(i + style.length * 11, 47) * h;
+        ctx.fillStyle = hash(i, 53) > .5 ? light : dark;
+        const r = size * (.45 + hash(i, 59));
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      }
+    };
+    switch (style) {
+      case 'ground':
+        speckle(Math.max(8, w * h / 90), 'rgba(245,202,146,.30)', 'rgba(35,24,18,.24)', 1.3);
+        ctx.strokeStyle = 'rgba(36,25,20,.24)'; ctx.lineWidth = 1;
+        for (let x = 9; x < w; x += 31) {
+          ctx.beginPath(); ctx.moveTo(x, h * .42); ctx.lineTo(x + 4, h * .56); ctx.lineTo(x - 2, h * .7); ctx.stroke();
+        }
+        break;
+      case 'stone':
+        ctx.strokeStyle = 'rgba(235,244,255,.22)'; ctx.lineWidth = 1;
+        for (let i = 0; i < Math.max(1, Math.floor(w / 45)); i++) {
+          const x = 5 + hash(i, 65) * Math.max(1, w - 10), y = 4 + hash(i, 66) * Math.max(1, h - 8);
+          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 4, y + 5); ctx.lineTo(x + 1, y + 10); ctx.lineTo(x + 8, y + 16); ctx.stroke();
+        }
+        speckle(Math.max(5, w * h / 150), 'rgba(255,255,255,.14)', 'rgba(0,0,0,.12)', .9);
+        break;
+      case 'brick':
+        ctx.strokeStyle = 'rgba(255,226,207,.26)'; ctx.lineWidth = .8;
+        for (let y = 20; y < h; y += 20) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+        break;
+      case 'wood':
+      case 'plank':
+      case 'bridge':
+        ctx.strokeStyle = 'rgba(255,224,174,.25)'; ctx.lineWidth = .8;
+        for (let y = 7; y < h; y += 11) {
+          ctx.beginPath();
+          for (let x = 0; x <= w; x += 5) {
+            const yy = y + Math.sin(x / 10 + y) * 1.1;
+            if (!x) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
+          }
+          ctx.stroke();
+        }
+        if (w > 25 && h > 18) {
+          ctx.strokeStyle = 'rgba(67,35,17,.45)';
+          ctx.beginPath(); ctx.ellipse(w * .68, h * .55, 4, 2, -.2, 0, Math.PI * 2); ctx.stroke();
+        }
+        break;
+      case 'sand':
+        speckle(Math.max(14, w * h / 28), 'rgba(255,248,211,.55)', 'rgba(125,82,39,.22)', .65);
+        ctx.strokeStyle = 'rgba(255,249,213,.26)'; ctx.lineWidth = 1;
+        for (let y = 8; y < h; y += 12) {
+          ctx.beginPath(); ctx.moveTo(0,y); ctx.quadraticCurveTo(w*.45,y-2,w,y+1); ctx.stroke();
+        }
+        break;
+      case 'snow':
+      case 'ice':
+        ctx.strokeStyle = 'rgba(255,255,255,.58)'; ctx.lineWidth = .85;
+        for (let i = 0; i < Math.max(2, w / 25); i++) {
+          const x = 5 + hash(i, 71) * Math.max(1, w - 10), y = 5 + hash(i, 72) * Math.max(1, h - 10);
+          ctx.beginPath(); ctx.moveTo(x-3,y); ctx.lineTo(x+3,y); ctx.moveTo(x,y-3); ctx.lineTo(x,y+3); ctx.stroke();
+        }
+        break;
+      case 'moss':
+        speckle(Math.max(8, w * h / 75), 'rgba(166,226,103,.5)', 'rgba(37,89,42,.35)', 1.8);
+        ctx.strokeStyle = 'rgba(199,241,133,.45)'; ctx.lineWidth = 1;
+        for (let x = 5; x < w; x += 15) {
+          ctx.beginPath(); ctx.moveTo(x, 2); ctx.quadraticCurveTo(x-4, 7, x+2, 11); ctx.stroke();
+        }
+        break;
+      case 'metal':
+      case 'steel':
+        ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = .7;
+        for (let y = 7; y < h; y += 5) { ctx.beginPath(); ctx.moveTo(3,y); ctx.lineTo(w-3,y); ctx.stroke(); }
+        for (const [x,y] of [[5,5],[w-5,5],[5,h-5],[w-5,h-5]]) {
+          ctx.fillStyle = '#39495a'; ctx.beginPath(); ctx.arc(x,y,2.2,0,Math.PI*2); ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.beginPath(); ctx.moveTo(x-1,y); ctx.lineTo(x+1,y); ctx.stroke();
+        }
+        break;
+      case 'gold':
+        speckle(Math.max(4, w * h / 230), 'rgba(255,255,220,.75)', 'rgba(153,91,0,.18)', 1.5);
+        break;
+      case 'crystal':
+      case 'obsidian':
+        ctx.strokeStyle = style === 'crystal' ? 'rgba(255,255,255,.38)' : 'rgba(212,139,255,.4)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(2,h*.28); ctx.lineTo(w*.42,h*.48); ctx.lineTo(w-3,h*.2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(w*.18,h-2); ctx.lineTo(w*.52,h*.52); ctx.lineTo(w*.82,h-2); ctx.stroke();
+        break;
+      case 'candy':
+        for (let i = 0; i < Math.max(5, w / 5); i++) {
+          const x = hash(i, 81) * w, y = hash(i, 82) * h;
+          ctx.save(); ctx.translate(x,y); ctx.rotate(hash(i,83)*Math.PI);
+          ctx.fillStyle = ['#fff3a6','#b8f4ff','#ffffff','#9dffb5'][i % 4];
+          rr(ctx,-2,-.7,4,1.4,.7); ctx.fill(); ctx.restore();
+        }
+        break;
+      case 'mud':
+      case 'slime':
+        ctx.fillStyle = 'rgba(255,255,255,.22)';
+        for (let i = 0; i < Math.max(2, w / 25); i++) {
+          const x = 5 + hash(i, 91) * Math.max(1,w-10), y = h*.3 + hash(i,92)*h*.55;
+          ctx.beginPath(); ctx.ellipse(x,y,2.5,1.2,-.3,0,Math.PI*2); ctx.fill();
+        }
+        break;
+      case 'bounce':
+        ctx.strokeStyle = 'rgba(255,255,255,.38)'; ctx.lineWidth = 1.1;
+        ctx.beginPath(); ctx.moveTo(4,h*.22); ctx.lineTo(w-4,h*.22); ctx.stroke();
+        speckle(Math.max(3,w/12),'rgba(255,255,255,.6)','rgba(0,0,0,.2)',.8);
+        break;
+      case 'conveyor':
+        ctx.fillStyle = 'rgba(255,255,255,.45)';
+        for (let x = 7; x < w; x += 24) { ctx.beginPath(); ctx.arc(x,h/2,1.3,0,Math.PI*2); ctx.fill(); }
+        break;
+      case 'cloud':
+        ctx.strokeStyle = 'rgba(255,255,255,.48)'; ctx.lineWidth = 1.5;
+        for (let i = 0; i < 3; i++) {
+          const x = w * (.2 + i * .28), y = h * (.65 + .08 * Math.sin(i));
+          ctx.beginPath(); ctx.moveTo(x-9,y); ctx.quadraticCurveTo(x,y-4,x+9,y); ctx.stroke();
+        }
+        break;
+      case 'spike':
+      case 'spikeDown':
+        ctx.strokeStyle = 'rgba(255,255,255,.68)'; ctx.lineWidth = 1.2;
+        for (let x = 10; x < w; x += 20) {
+          ctx.beginPath();
+          if (style === 'spike') { ctx.moveTo(x-3,h-5); ctx.lineTo(x,h*.35); }
+          else { ctx.moveTo(x-3,5); ctx.lineTo(x,h*.65); }
+          ctx.stroke();
+        }
+        break;
+      case 'thorns':
+        ctx.strokeStyle = 'rgba(198,255,155,.6)'; ctx.lineWidth = 1;
+        for (let x = 7; x < w; x += 12) {
+          ctx.beginPath(); ctx.moveTo(x,h*.48); ctx.lineTo(x+2,h*.22); ctx.moveTo(x,h*.48); ctx.lineTo(x-3,h*.68); ctx.stroke();
+        }
+        break;
+      case 'lava':
+        ctx.strokeStyle = 'rgba(255,248,154,.7)'; ctx.lineWidth = 1.3;
+        for (let x = 8; x < w; x += 20) {
+          const y = 7 + Math.sin(x*.2+t*2)*1.8;
+          ctx.beginPath(); ctx.moveTo(x-4,y); ctx.quadraticCurveTo(x,y-2,x+5,y); ctx.stroke();
+        }
+        break;
+      case 'water':
+        ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = 1.2;
+        for (let x = 7; x < w; x += 22) {
+          const y = 6 + Math.sin(x*.16+t*2.4)*2;
+          ctx.beginPath(); ctx.moveTo(x-5,y); ctx.quadraticCurveTo(x,y-2,x+5,y); ctx.stroke();
+        }
+        break;
+      case 'poison':
+      case 'acid':
+        ctx.fillStyle = 'rgba(235,255,175,.7)';
+        for (let x = 9; x < w; x += 23) {
+          const y = h*.45 + Math.sin(t*3+x)*2;
+          ctx.beginPath(); ctx.arc(x,y,1.5,0,Math.PI*2); ctx.fill();
+        }
+        break;
+      case 'saw':
+        ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(-w*.1,0); ctx.lineTo(w*.2,h*.2); ctx.stroke();
+        break;
+      case 'fire': {
+        const glow = ctx.createRadialGradient(w*.5,h*.72,1,w*.5,h*.72,Math.max(w,h)*.8);
+        glow.addColorStop(0,'rgba(255,190,40,.24)'); glow.addColorStop(1,'rgba(255,60,10,0)');
+        ctx.fillStyle = glow; ctx.fillRect(0,0,w,h);
+        break;
+      }
+      case 'electric':
+        ctx.strokeStyle = 'rgba(255,255,255,.82)'; ctx.lineWidth = 1.1;
+        ctx.beginPath(); ctx.moveTo(w*.2,0); ctx.lineTo(w*.48,h*.35); ctx.lineTo(w*.35,h*.62); ctx.lineTo(w*.72,h); ctx.stroke();
+        break;
+      case 'laser':
+        ctx.shadowColor = '#ff315b'; ctx.shadowBlur = 9;
+        ctx.fillStyle = 'rgba(255,180,195,.45)'; ctx.fillRect(w*.42,0,w*.16,h);
+        ctx.shadowBlur = 0;
+        break;
+      default:
+        speckle(Math.max(3,w*h/300),'rgba(255,255,255,.12)','rgba(0,0,0,.12)',.8);
+    }
+    ctx.restore();
+  }
+
   // Blöcke ohne eigenen Rahmen
   const NO_OUTLINE = { spike: 1, spikeDown: 1, thorns: 1, lava: 1, water: 1, poison: 1, saw: 1, fire: 1, electric: 1, acid: 1, laser: 1, bounce: 1, conveyor: 1, plank: 1, cloud: 1, steel: 1, bridge: 1 };
 
@@ -1162,6 +1368,7 @@
     const c = s.getContext('2d');
     c.scale(S, S);
     ST[def.style](c, b.w, b.h, base, 0, def);
+    drawMaterialDetails(c, b.w, b.h, def.style, base, 0);
     if (!NO_OUTLINE[def.style]) {
       c.strokeStyle = 'rgba(15,10,10,.65)';
       c.lineWidth = 2;
@@ -1188,6 +1395,7 @@
     if (def.anim) {
       ctx.translate(b.x, b.y);
       ST[def.style](ctx, b.w, b.h, base, t, def);
+      drawMaterialDetails(ctx, b.w, b.h, def.style, base, t);
     } else {
       ctx.drawImage(getSprite(b, def, base), b.x, b.y, b.w, b.h);
     }
@@ -1531,7 +1739,15 @@
     for (let i = fx.length - 1; i >= 0; i--) {
       const p = fx[i];
       p.life += f;
-      p.vy += 0.25 * f;
+      if (p.kind === 'spark') {
+        p.vy -= 0.045 * f;
+        p.vx *= Math.pow(.985, f);
+      } else if (p.kind === 'bubble') {
+        p.vy -= 0.018 * f;
+        p.vx *= Math.pow(.992, f);
+      } else {
+        p.vy += 0.25 * f;
+      }
       p.x += p.vx * f;
       p.y += p.vy * f;
       if (p.life >= p.max) fx.splice(i, 1);
@@ -1541,9 +1757,63 @@
     for (const p of fx) {
       ctx.globalAlpha = Math.max(0, 1 - p.life / p.max);
       ctx.fillStyle = p.c;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
+      if (p.kind === 'bubble') {
+        ctx.strokeStyle = p.c;
+        ctx.lineWidth = .9;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.7)';
+        ctx.beginPath(); ctx.arc(p.x-p.r*.3, p.y-p.r*.3, Math.max(.45,p.r*.22), 0, Math.PI*2); ctx.fill();
+      } else if (p.kind === 'spark') {
+        ctx.save();
+        ctx.shadowColor = p.c; ctx.shadowBlur = 6;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0; ctx.strokeStyle = p.c; ctx.lineWidth = Math.max(.7,p.r*.65);
+        ctx.beginPath(); ctx.moveTo(p.x-p.vx*2, p.y-p.vy*2); ctx.lineTo(p.x,p.y); ctx.stroke();
+        ctx.restore();
+      } else {
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill();
+      }
     }
     ctx.globalAlpha = 1;
+  }
+
+
+  const ambientEmitters = new WeakMap();
+  function emitAmbientBlockFx(block, def, t) {
+    if (!def || block.solid === false) return;
+    const style = def.style;
+    const settings = {
+      fire:     { every: .045, count: 2, colors: ['#fff3a0','#ffd34d','#ff8a24','#ff4b18'], type: 'spark', speed: 2.1 },
+      lava:     { every: .085, count: 2, colors: ['#fff18a','#ffbd3d','#ff681e'], type: 'spark', speed: 1.45 },
+      electric: { every: .075, count: 2, colors: ['#ffffff','#e5d8ff','#9d7cff'], type: 'spark', speed: 1.6 },
+      acid:     { every: .12, count: 1, colors: ['#efff9a','#c9f34b'], type: 'bubble', speed: .7 },
+      poison:   { every: .16, count: 1, colors: ['#dcff91','#8fea55'], type: 'bubble', speed: .55 },
+      water:    { every: .20, count: 1, colors: ['#e6fbff','#8edcff'], type: 'bubble', speed: .48 },
+      crystal:  { every: .30, count: 1, colors: ['#ffffff','#a7f0ff','#67dfff'], type: 'spark', speed: .42 },
+      gold:     { every: .34, count: 1, colors: ['#fff7b0','#ffe06a'], type: 'spark', speed: .35 },
+      candy:    { every: .42, count: 1, colors: ['#ffffff','#aef4ff','#ffd1e7'], type: 'spark', speed: .28 },
+    }[style];
+    if (!settings || fx.length > 560) return;
+    let state = ambientEmitters.get(block);
+    if (!state) { state = { last: t }; ambientEmitters.set(block, state); return; }
+    if (t - state.last < settings.every) return;
+    state.last = t;
+    for (let i = 0; i < settings.count && fx.length < 600; i++) {
+      const x = block.x + 4 + Math.random() * Math.max(1, block.w - 8);
+      const y = style === 'fire' || style === 'lava' || style === 'electric'
+        ? block.y + block.h - 2 - Math.random() * Math.min(5, block.h)
+        : block.y + block.h * (.45 + Math.random() * .42);
+      const speed = settings.speed * (.55 + Math.random() * .9);
+      fx.push({
+        x, y,
+        vx: (Math.random() - .5) * (settings.type === 'spark' ? 1.15 : .32),
+        vy: settings.type === 'bubble' ? -speed : -speed * (.75 + Math.random()*.5),
+        life: 0, max: 22 + Math.random() * 30,
+        c: settings.colors[(Math.random() * settings.colors.length) | 0],
+        r: settings.type === 'bubble' ? 1.2 + Math.random() * 2.1 : .9 + Math.random() * 1.7,
+        kind: settings.type
+      });
+    }
   }
 
   function drawSensorRays(ctx, agent) {
@@ -1571,7 +1841,11 @@
     lastRender = now;
     drawBackground(ctx, t);
     const lvl = view.level;
-    for (let i = 0; i < lvl.blocks.length; i++) drawBlock(ctx, lvl.blocks[i], t);
+    for (let i = 0; i < lvl.blocks.length; i++) {
+      const block = lvl.blocks[i];
+      drawBlock(ctx, block, t);
+      emitAmbientBlockFx(block, BLOCK_TYPES[block.type], t);
+    }
     if (lvl.goal) drawGoal(ctx, lvl.goal, t);
     if (lvl.start) drawStart(ctx, lvl.start, t);
     const ags = view.agents || [];

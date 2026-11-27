@@ -1,6 +1,6 @@
 /* nn.js — Mehrschichtiges neuronales Netz für Ki-Evo.
    Das Genom enthält Gewichte und Biases jeder Schicht in einem Float32Array. */
-export const LAYERS = [65, 32, 24, 12, 2];
+export const LAYERS = [77, 40, 28, 14, 2];
 export const PREVIOUS_LAYERS = [65, 12, 8, 2];
 export const LEGACY_LAYERS = [14, 12, 8, 2];
 export const OLDEST_LAYERS = [6, 12, 8, 2];

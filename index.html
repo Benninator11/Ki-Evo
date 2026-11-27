@@ -119,6 +119,9 @@
         <label class="check"><input type="checkbox" id="adaptiveMutation" checked> Mutation bei Stillstand automatisch erhöhen</label>
         <label class="slider">Stillstand ab Generation: <b id="stagnationVal">6</b><input type="range" id="stagnationRange" min="2" max="20" value="6"></label>
         <label class="slider">Stillstands-Boost: <b id="boostVal">1,6×</b><input type="range" id="boostRange" min="1" max="30" value="16"></label>
+        <label class="check"><input type="checkbox" id="levelMix"> Level-Mix: mit wechselnden Leveln trainieren</label>
+        <p class="hint">Wechselt nach jeder Generation zufällig zwischen allen 15 Vorlagen und gespiegelten Varianten. So lernt die KI, unterschiedliche Strecken zu bewältigen.</p>
+        <p class="hint" id="levelMixStatus">Aus</p>
       </section>
       <section>
         <div class="row">

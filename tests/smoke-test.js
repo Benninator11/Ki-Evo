@@ -4,8 +4,8 @@ import { LAYERS, genomeSize, randomGenome, makeRng, forward, upgradeLegacyGenome
 import { GA, MAX_POPULATION } from '../js/ai.js';
 import { Level } from '../js/level.js';
 
-assert.deepEqual(LAYERS, [65, 32, 24, 12, 2]);
-assert.equal(genomeSize(), 3230, 'The deeper network should expose 3,230 trainable parameters.');
+assert.deepEqual(LAYERS, [77, 40, 28, 14, 2]);
+assert.equal(genomeSize(), 4704, 'The expanded network should expose 4,704 trainable parameters.');
 assert.equal(BLOCK_TYPE_KEYS.length, 36);
 assert.equal(genomeSize(), 65 * 32 + 32 + 32 * 24 + 24 + 24 * 12 + 12 + 12 * 2 + 2);
 const easy = Level.preset('easy');
@@ -106,7 +106,8 @@ assert.ok(reverseLeftControl.move > 0.8, 'The neural policy must also be able to
 const agent = createAgent(easy);
 const input = new Float32Array(LAYERS[0]);
 sense(agent, easy, input);
-assert.equal(input.length, 65);
+assert.equal(input.length, 77);
+assert.ok(input.slice(65, 77).every(Number.isFinite), 'All expanded environment and surface sensors must be finite.');
 assert.equal(agent.rays.length, 18);
 assert.ok(input.slice(24).every(Number.isFinite));
 assert.ok(input.every(Number.isFinite));
